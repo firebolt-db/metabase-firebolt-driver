@@ -1,0 +1,25 @@
+info:
+  name: Metabase Firebolt Driver
+  version: 1.0.0
+  description: Allows Metabase to connect to Firebolt databases.
+driver:
+  name: firebolt
+  display-name: Firebolt
+  lazy-load: true
+  parent: sql-jdbc
+  connection-properties:
+    - merge:
+        - dbname
+        - name: db
+          placeholder: Database
+    - user
+    - password
+    - merge:
+        - additional-options
+        - placeholder: "engine=engine_name"
+  connection-properties-include-tunnel-config: false
+init:
+  - step: load-namespace
+    namespace: metabase.driver.firebolt
+  - step: register-jdbc-driver
+    class: com.firebolt.FireboltDriver
