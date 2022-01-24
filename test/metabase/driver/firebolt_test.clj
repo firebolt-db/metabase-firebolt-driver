@@ -18,7 +18,17 @@
             [metabase.test.data.dataset-definitions :as dataset-defs]
             [clojure.string :as str]
             [metabase.driver.common :as driver.common]
-            [metabase.driver.sql.util.unprepare :as unprepare])
+            [metabase.driver.sql.util.unprepare :as unprepare]
+            [metabase
+             [models :refer [Table]]
+             [sync :as sync]
+             [util :as u]]
+            [metabase.test.data
+             [interface :as tx]]
+            [clojure.java.jdbc :as jdbc]
+            [toucan.db :as db]
+            [metabase.models
+             [database :refer [Database]]])
   (:import [java.sql DatabaseMetaData Time Types Timestamp PreparedStatement]
            [java.time LocalDate LocalDateTime LocalTime OffsetDateTime OffsetTime ZonedDateTime]
            [java.sql Connection DatabaseMetaData ResultSet]
@@ -175,3 +185,26 @@
                       columns))
                (is (= [[7929 7929 7929]]
                       rows))))))
+
+(defn has-value [key value]
+  "Returns a predicate that tests whether a map contains a specific value"
+  (fn [m]
+    (= value (m key))))
+
+(deftest describe-database-views-test
+  (mt/test-driver :firebolt
+      (testing "describe-database views"
+           (let [details (mt/dbdef->connection-details :firebolt :db {:database-name  (tx/db-test-env-var-or-throw :firebolt :db)})
+                 spec    (sql-jdbc.conn/connection-details->spec :firebolt details)]
+             ;; create the DB object
+             (mt/with-temp Database [database {:engine :firebolt, :details (assoc details :db  (tx/db-test-env-var-or-throw :firebolt :db))}]
+                           (let [sync! #(sync/sync-database! database)]
+                             ;; create a view
+                             (jdbc/execute! spec ["DROP VIEW IF EXISTS \"example_view\""])
+                             (jdbc/execute! spec ["CREATE VIEW \"example_view\" AS SELECT 'hello world' AS \"name\""])
+                             ;; now sync the DB
+                             (sync!)
+                             ;; now take a look at the Tables in the database, there should be an entry for the view
+                             (is (= [{:name "example_view"}]
+                                    (filter (has-value :name "example_view") (map (partial into {})
+                                                                                  (db/select [Table :name] :db_id (u/the-id database))) )))))))))
