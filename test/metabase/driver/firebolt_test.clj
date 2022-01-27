@@ -1,7 +1,6 @@
 (ns metabase.driver.firebolt-test
   (:require [clojure.test :refer :all]
             [metabase.driver :as driver]
-            [metabase.query-processor :as qp]
             [metabase.driver.sql-jdbc
              [connection :as sql-jdbc.conn]
              [sync :as sql-jdbc.sync]]
@@ -29,10 +28,8 @@
             [toucan.db :as db]
             [metabase.models
              [database :refer [Database]]])
-  (:import [java.sql DatabaseMetaData Time Types Timestamp PreparedStatement]
-           [java.time LocalDate LocalDateTime LocalTime OffsetDateTime OffsetTime ZonedDateTime]
-           [java.sql Connection DatabaseMetaData ResultSet]
-           [java.util Calendar TimeZone]))
+  (:import [java.sql DatabaseMetaData Types Connection ResultSet]
+           [java.time LocalTime OffsetDateTime OffsetTime ZonedDateTime]))
 
 ; TEST - Connection details specifiaction
 (deftest connection-details->spec-test
@@ -91,8 +88,7 @@
   (is (= (hsql/call :date_trunc (hx/literal "year") "2021-06-06 12:12:12")
          (sql.qp/date :firebolt :year "2021-06-06 12:12:12")))
   (is (= (hsql/call :to_timestamp "2021-06-06 12:12:12")
-         (sql.qp/unix-timestamp->honeysql :firebolt :seconds "2021-06-06 12:12:12")))
-  )
+         (sql.qp/unix-timestamp->honeysql :firebolt :seconds "2021-06-06 12:12:12"))))
 
 ; TEST - extracting the part of date functions
 (deftest date-extraction-functions-test
@@ -109,8 +105,7 @@
   (is (= (hsql/call :to_month "2021-06-06 12:12:12")
          (sql.qp/date :firebolt :month-of-year "2021-06-06 12:12:12")))
   (is (= (hsql/call :to_quarter "2021-06-06 12:12:12")
-         (sql.qp/date :firebolt :quarter-of-year "2021-06-06 12:12:12")))
-  )
+         (sql.qp/date :firebolt :quarter-of-year "2021-06-06 12:12:12"))))
 
 (deftest current-datetime-honeysql-form-test
   (is (= (metabase.util.honeysql-extensions/with-type-info (hsql/call :cast #sql/raw "NOW()" #sql/raw "timestamp") #:metabase.util.honeysql-extensions{:database-type "timestamp"})
@@ -145,8 +140,7 @@
   (is (= false
          (driver/supports? :firebolt :nested-queries)))
   (is (= true
-         (driver/supports? :firebolt :binning)))
-  )
+         (driver/supports? :firebolt :binning))))
 
 (deftest ddl-statements-test
   (testing "make sure we didn't break the code that is used to generate DDL statements when we add new test datasets"
@@ -171,20 +165,20 @@
 (deftest aggregations-test
   (mt/test-driver :firebolt
     (testing (str "make sure queries with two or more of the same aggregation type still work.")
-             (let [{:keys [rows columns]} (qp.test/rows+column-names
-                                           (mt/run-mbql-query checkins
-                                                              {:aggregation [[:sum $user_id] [:sum $user_id]]}))]
-               (is (= ["sum" "sum_2"]
-                      columns))
-               (is (= [[7929 7929]]
-                      rows)))
-             (let [{:keys [rows columns]} (qp.test/rows+column-names
-                                           (mt/run-mbql-query checkins
-                                                              {:aggregation [[:sum $user_id] [:sum $user_id] [:sum $user_id]]}))]
-               (is (= ["sum" "sum_2" "sum_3"]
-                      columns))
-               (is (= [[7929 7929 7929]]
-                      rows))))))
+       (let [{:keys [rows columns]} (qp.test/rows+column-names
+                                     (mt/run-mbql-query checkins
+                                                        {:aggregation [[:sum $user_id] [:sum $user_id]]}))]
+         (is (= ["sum" "sum_2"]
+                columns))
+         (is (= [[7929 7929]]
+                rows)))
+       (let [{:keys [rows columns]} (qp.test/rows+column-names
+                                     (mt/run-mbql-query checkins
+                                                        {:aggregation [[:sum $user_id] [:sum $user_id] [:sum $user_id]]}))]
+         (is (= ["sum" "sum_2" "sum_3"]
+                columns))
+         (is (= [[7929 7929 7929]]
+                rows))))))
 
 (defn has-value [key value]
   "Returns a predicate that tests whether a map contains a specific value"
@@ -193,18 +187,18 @@
 
 (deftest describe-database-views-test
   (mt/test-driver :firebolt
-      (testing "describe-database views"
-           (let [details (mt/dbdef->connection-details :firebolt :db {:database-name  (tx/db-test-env-var-or-throw :firebolt :db)})
-                 spec    (sql-jdbc.conn/connection-details->spec :firebolt details)]
-             ;; create the DB object
-             (mt/with-temp Database [database {:engine :firebolt, :details (assoc details :db  (tx/db-test-env-var-or-throw :firebolt :db))}]
-                           (let [sync! #(sync/sync-database! database)]
-                             ;; create a view
-                             (jdbc/execute! spec ["DROP VIEW IF EXISTS \"example_view\""])
-                             (jdbc/execute! spec ["CREATE VIEW \"example_view\" AS SELECT 'hello world' AS \"name\""])
-                             ;; now sync the DB
-                             (sync!)
-                             ;; now take a look at the Tables in the database, there should be an entry for the view
-                             (is (= [{:name "example_view"}]
-                                    (filter (has-value :name "example_view") (map (partial into {})
-                                                                                  (db/select [Table :name] :db_id (u/the-id database))) )))))))))
+    (testing "describe-database views"
+    (let [details (mt/dbdef->connection-details :firebolt :db {:database-name  (tx/db-test-env-var-or-throw :firebolt :db)})
+          spec    (sql-jdbc.conn/connection-details->spec :firebolt details)]
+    ;; create the DB object
+    (mt/with-temp Database [database {:engine :firebolt, :details (assoc details :db  (tx/db-test-env-var-or-throw :firebolt :db))}]
+      (let [sync! #(sync/sync-database! database)]
+      ;; create a view
+      (jdbc/execute! spec ["DROP VIEW IF EXISTS \"example_view\""])
+      (jdbc/execute! spec ["CREATE VIEW \"example_view\" AS SELECT 'hello world' AS \"name\""])
+        ;; now sync the DB
+        (sync!)
+        ;; now take a look at the Tables in the database, there should be an entry for the view
+        (is (= [{:name "example_view"}]
+              (filter (has-value :name "example_view") (map (partial into {})
+              (db/select [Table :name] :db_id (u/the-id database))))))))))))

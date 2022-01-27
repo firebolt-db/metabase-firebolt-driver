@@ -5,7 +5,6 @@
             [clojure.java.jdbc :as jdbc]
             [clojure.tools.logging  :as log]
             [honeysql.core :as hsql]
-            [clj-time.format :as format]
             [java-time :as t]
             [honeysql.format :as hformat]
             [medley.core :as m]
@@ -33,17 +32,15 @@
             [metabase.query-processor.util :as qputil]
             [toucan.db :as db]
             [toucan.models :as models])
-  (:import [java.sql DatabaseMetaData Time Types Timestamp PreparedStatement]
-           [java.time LocalDate LocalDateTime LocalTime OffsetDateTime OffsetTime ZonedDateTime]
-           [java.sql Connection DatabaseMetaData ResultSet]
-           [java.util Calendar TimeZone]))
+  (:import [java.sql DatabaseMetaData Types Connection ResultSet]
+           [java.time LocalTime OffsetDateTime OffsetTime ZonedDateTime]))
 
-;; Firebolt driver registration
+; Firebolt driver registration
 (driver/register! :firebolt, :parent #{:sql-jdbc ::legacy/use-legacy-classes-for-read-and-set})
 
 ;;; ---------------------------------------------- sql-jdbc.connection -----------------------------------------------
 
-;;; Create database specification and obtain connection properties for connection to a Firebolt database.
+; Create database specification and obtain connection properties for connecting to a Firebolt database.
 (defmethod sql-jdbc.conn/connection-details->spec :firebolt
   [_ {:keys [db]
       :or    {db ""}
@@ -53,14 +50,14 @@
         (sql-jdbc.common/handle-additional-options  (select-keys details [:password :classname :subprotocol :user :subname]))
         )))
 
-;; Testing the firebolt database connection
+; Testing the firebolt database connection
 (defmethod driver/can-connect? :firebolt [driver details]
    (let [connection (sql-jdbc.conn/connection-details->spec driver (ssh/include-ssh-tunnel! details))]
      (= 1 (first (vals (first (jdbc/query connection ["SELECT 1"])))))))
 
 ;;; ------------------------------------------------- sql-jdbc.sync --------------------------------------------------
 
-;; Define mapping of firebolt data types to base type
+; Define mapping of firebolt data types to base type
 (def ^:private database-type->base-type
   (sql-jdbc.sync/pattern-based-database-type->base-type
     [[#"Array"              :type/Array]
@@ -75,27 +72,26 @@
      [#"Decimal"            :type/Decimal]
      ]))
 
-;; Map firebolt data types to base types
+; Map firebolt data types to base types
 (defmethod sql-jdbc.sync/database-type->base-type :firebolt [_ database-type]
    (database-type->base-type database-type))
 
-;; Concatenate the elements of an array based on array elemets type (coverting array data type to string type to apply filter on array data)
+; Concatenate the elements of an array based on array elemets type (coverting array data type to string type to apply filter on array data)
 (defn is-string-array? [os]
   (if (= (type (first (vec os))) java.lang.String) (str "['" (clojure.string/join "','" os) "']") (str "[" (clojure.string/join "," os) "]")))
 
-;; Handle array data type
+; Handle array data type
 (defmethod metabase.driver.sql-jdbc.execute/read-column-thunk [:firebolt Types/ARRAY]
    [_ ^ResultSet rs _ ^Integer i]
    (fn []
      (def os (object-array (.getArray (.getArray rs i))))
      (is-string-array? os)))
 
-;; Helpers for Date extraction
+; Helpers for Date extraction
 
 ;;; ------------------------------------------------- date functions -------------------------------------------------
 
 ; If `expr` is a date, we need to cast it to a timestamp before we can truncate to a finer granularity
-; Ideally, we should make this conditional. There's a generic approach above, but different use cases should be tested.
 (defmethod sql.qp/date [:firebolt :minute]          [_ _ expr] (hsql/call :date_trunc (hx/literal :minute) (hx/cast :timestamp expr)))
 (defmethod sql.qp/date [:firebolt :hour]            [_ _ expr] (hsql/call :date_trunc (hx/literal :hour) (hx/cast :timestamp expr)))
 (defmethod sql.qp/date [:firebolt :day]             [_ _ expr] (hsql/call :date_trunc (hx/literal :day) expr))
@@ -118,14 +114,15 @@
   [_]
   :monday)
 
+; Generic date-trunc function to cast date expr to timstamp
 (defn- date-trunc [unit expr]
   (hsql/call :date_trunc (hx/literal unit) (hx/->timestamp expr)))
 
-; Modify start of week to be monday
+; Modify start of week to monday
 (defmethod sql.qp/date [:firebolt :week]
   [_ _ expr] (sql.qp/adjust-start-of-week :firebolt (partial date-trunc :week) expr))
 
-; Return a HoneySQL form appropriate for converting a Unix timestamp integer field or value to an proper SQL Timestamp.
+; Return a appropriate HoneySQL form for converting a Unix timestamp integer field or value to an proper SQL Timestamp.
 (defmethod sql.qp/unix-timestamp->honeysql [:firebolt :seconds] [_ _ expr] (hsql/call :to_timestamp expr))
 
 ; Return a HoneySQL form that performs represents addition of some temporal interval to the original `hsql-form'.
@@ -158,16 +155,17 @@
   [_ t]
   (format "'%s'" t))
 
-; Converting time with timezone datatype to SQL-style literal string
+; Converting ZonedDateTime datatype to SQL-style literal string
 (defmethod unprepare/unprepare-value [:firebolt ZonedDateTime]
   [_ t]
   (format "timestamp '%s'" (u.date/format-sql (t/local-date-time t))))
 
-; Converting time with timezone datatype to SQL-style literal string
+; Converting OffsetDateTime datatype to SQL-style literal string
 (defmethod unprepare/unprepare-value [:firebolt OffsetDateTime]
   [_ t]
   (format "timestamp '%s'" (u.date/format-sql (t/local-date-time t))))
 
+; Converting OffsetTime datatype to SQL-style literal string
 (defmethod unprepare/unprepare-value [:firebolt OffsetTime]
   [_ t]
   (format "timestamp '%s'" (u.date/format-sql (t/local-date-time t))))
@@ -175,6 +173,24 @@
 (defmethod sql.qp/cast-temporal-string [:firebolt :Coercion/ISO8601->Time]
   [_driver _semantic_type expr]
   (hx/maybe-cast :string expr))
+
+;;; ------------------------------------------------- query handling -------------------------------------------------
+
+(models/defmodel Table :metabase_table)
+
+; ignore the schema when producing the identifier
+(defn qualified-name-components
+  "Return the pieces that represent a path to `field`, of the form `[table-name parent-fields-name* field-name]`."
+  [{field-name :name, table-id :table_id}]
+  [(db/select-one-field :name Table, :id table-id) field-name])
+
+(defmethod sql.qp/field->identifier :firebolt
+  [_ field]
+  (apply hsql/qualify (qualified-name-components field)))
+
+; Get the active tables of configured database
+(defmethod sql-jdbc.sync/active-tables :firebolt [& args]
+  (apply sql-jdbc.sync/post-filtered-active-tables args))
 
 ; De-parameterize the query and substitue values
 (defmethod driver/execute-reducible-query :firebolt
@@ -188,26 +204,6 @@
                         (dissoc :params))
         query       (assoc outer-query :native inner-query)]
     ((get-method driver/execute-reducible-query :sql-jdbc) driver query context respond)))
-
-
-;;; ------------------------------------------------- query handling -------------------------------------------------
-
-(models/defmodel Table :metabase_table)
-
-;; ignore the schema when producing the identifier
-(defn qualified-name-components
-  "Return the pieces that represent a path to `field`, of the form `[table-name parent-fields-name* field-name]`."
-  [{field-name :name, table-id :table_id}]
-  [(db/select-one-field :name Table, :id table-id) field-name])
-
-(defmethod sql.qp/field->identifier :firebolt
-  [_ field]
-  (apply hsql/qualify (qualified-name-components field)))
-
-;; Get the active tables of configured database
-(defmethod sql-jdbc.sync/active-tables :firebolt [& args]
-  (apply sql-jdbc.sync/post-filtered-active-tables args))
-
 
 ;;; ------- Methods to handle Views, Describe database to not return Agg and Join indexes in Firebolt ----------------
 ;;; All the functions below belong to describe-table.clj which are all private in metabase and cant be called or
@@ -341,6 +337,7 @@
            ;; find PKs and mark them
            (add-table-pks (.getMetaData conn))))))
 
+; making between clause in a query to be inside brackets
 (defmethod hformat/fn-handler "between" [_ field lower upper]
   (str "(" (hformat/to-sql-value field) " BETWEEN " (hformat/to-sql-value lower) " AND " (hformat/to-sql-value upper) ")"))
 
@@ -350,23 +347,23 @@
 
 (defmethod driver/supports? [:firebolt :expression-aggregations]  [_ _] true)
 
-(defmethod driver/supports? [:firebolt :standard-deviation-aggregations]  [_ _] false)
-
 (defmethod driver/supports? [:firebolt :percentile-aggregations]  [_ _] true)
 
 (defmethod driver/supports? [:firebolt :foreign-keys]  [_ _] true)
 
-(defmethod driver/supports? [:firebolt :nested-fields]  [_ _] false)
+(defmethod driver/supports? [:firebolt :binning]  [_ _] true)
 
-(defmethod driver/supports? [:firebolt :set-timezone]  [_ _] false)
+(defmethod driver/supports? [:firebolt :regex]  [_ _] false)
+
+(defmethod driver/supports? [:firebolt :standard-deviation-aggregations]  [_ _] false)
 
 (defmethod driver/supports? [:firebolt :nested-queries]  [_ _] false)
 
-(defmethod driver/supports? [:firebolt :binning]  [_ _] true)
-
 (defmethod driver/supports? [:firebolt :case-sensitivity-string-filter-options]  [_ _] false)
 
-(defmethod driver/supports? [:firebolt :regex]  [_ _] false)
+(defmethod driver/supports? [:firebolt :set-timezone]  [_ _] false)
+
+(defmethod driver/supports? [:firebolt :nested-fields]  [_ _] false)
 
 
 
