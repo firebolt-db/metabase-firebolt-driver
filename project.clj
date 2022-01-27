@@ -7,7 +7,7 @@
   :repositories {"project" "file:repo"}
 
   :aliases
-    {"test"       ["with-profile" "+unit_tests" "test"]}
+    {"test"       ["with-profile" "test"]}
 
   :profiles
   {:provided
@@ -18,7 +18,4 @@
     :aot            :all
     :javac-options  ["-target" "1.8", "-source" "1.8"]
     :target-path    "target/%s"
-    :uberjar-name   "firebolt.metabase-driver.jar"}
-
-    :unit_tests
-    {:test-paths     ^:replace ["test_unit"]}})
+    :uberjar-name   "firebolt.metabase-driver.jar"}})
