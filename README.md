@@ -7,7 +7,7 @@ Beginning with Metabase 0.32, drivers must be stored in a `plugins` directory in
 ### Download Metabase Jar and Run
 
 1. Download a fairly recent Metabase binary release (jar file) from the [Metabase distribution page](https://metabase.com/start/jar.html).
-2. Download the Firebolt driver jar from the ["Firebolt Driver"](https://drive.google.com/drive/u/0/folders/1mcfoI8It1tW2XdtUt36WmIXVbtiz_QCL).
+2. Download the Firebolt driver jar from the ["Firebolt Driver"](https://drive.google.com/drive/u/0/folders/1ybVU7sViEcgYQ0J6-effFt_6uGJZFt3o).
 3. Download the firebolt jdbc driver jar from the ["Firebolt JDBC Driver"](https://docs.firebolt.io/integrations/connecting-via-jdbc).
 4. Create a directory and copy the `metabase.jar` to it.
 5. In that directory create a sub-directory called `plugins`.
@@ -25,7 +25,7 @@ In either case, you should see a message on startup similar to:
 ## Configuring
 
 1. Once you've started up Metabase, open http://localhost:3000 , go to add a database and select "Firebolt".
-2. You'll need to provide the Host, Port, Database Name, Username and Password.
+2. You'll need to provide the Database Name, Username and Password.
 
 ### Prerequisites
 
@@ -49,7 +49,7 @@ In either case, you should see a message on startup similar to:
 
    ```shell
    cd modules/drivers
-   git clone https://github.com/raghavSharmaSigmoid/metabase-firebolt-driver
+   git clone https://github.com/firebolt-db/metabase-firebolt-driver
    ```
 
 3. Download Firebolt jdbc driver from the [Firebolt generic jdbc driver](https://docs.firebolt.io/integrations/connecting-via-jdbc) and paste it in metabase-firebolt-driver directory to make a local maven repo.
