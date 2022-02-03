@@ -51,7 +51,18 @@ jobs:
            mkdir repo
            mvn deploy:deploy-file -Durl=file:repo -DgroupId=com.firebolt -DartifactId=metabase-core -Dversion=1.40 -Dpackaging=jar -Dfile=metabase.jar
            mvn deploy:deploy-file -Durl=file:repo -DgroupId=com.firebolt -DartifactId=firebolt-jdbc -Dversion=1.0.0 -Dpackaging=jar -Dfile=firebolt-jdbc-1.25-jar-with-dependencies.jar
-    - name: Install dependencies
+    - name: "Install dependencies"
       run: lein deps
-    - name: Run tests
-      run: lein test
+
+    - name: "Package into a jar"
+      run: LEIN_SNAPSHOTS_IN_RELEASE=true DEBUG=1 lein uberjar
+      
+    - name: "Run FOSSA Scan"
+      uses: fossas/fossa-action@v1
+      with:
+        api-key: ${{ secrets.FOSSA_TOKEN }}
+    - name: "Run FOSSA Test"
+      uses: fossas/fossa-action@v1
+      with:
+        api-key: ${{ secrets.FOSSA_TOKEN }}
+        run-tests: true 
