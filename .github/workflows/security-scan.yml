@@ -8,22 +8,27 @@ on:
 
 jobs:
   build:
+    uses: ./.github/workflows/build.yml@security-scan
 
+  scan:
+    needs: build
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    
-    - name: "build jar"
-      uses: firebolt-db/metabase-firebolt-driver/.github/workflows/build.yml@security-scan
-      
-    - name: "Run FOSSA Scan"
-      uses: fossas/fossa-action@v1
-      with:
-        api-key: ${{ secrets.FOSSA_TOKEN }}
+      - uses: actions/checkout@v2
 
-    - name: "Run FOSSA Test"
-      uses: fossas/fossa-action@v1
-      with:
-        api-key: ${{ secrets.FOSSA_TOKEN }}
-        run-tests: true 
+      - name: "Download built jar"
+        uses: actions/download-artifact@v2
+        with:
+          name: firebolt.metabase-driver.jar
+
+      - name: "Run FOSSA Scan"
+        uses: fossas/fossa-action@v1
+        with:
+          api-key: ${{ secrets.FOSSA_TOKEN }}
+
+      - name: "Run FOSSA Test"
+        uses: fossas/fossa-action@v1
+        with:
+          api-key: ${{ secrets.FOSSA_TOKEN }}
+          run-tests: true
