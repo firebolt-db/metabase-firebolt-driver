@@ -14,8 +14,8 @@ jobs:
       - name: "Checkout Metabase Code"
         uses: actions/checkout@v2
         with:
-          repository: metabase/metabase@${{ inputs.version }}
-          path: metabase
+          repository: metabase/metabase
+          ref: ${{ inputs.version }}
 
       - name: Prepare java
         uses: actions/setup-java@v2
@@ -32,7 +32,6 @@ jobs:
 
       - name: "Build metabase"
         run: |
-              cd metabase
               clojure -X:deps prep
               cd modules/drivers
               clojure -X:deps prep
