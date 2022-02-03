@@ -1,4 +1,4 @@
-name: Clojure CI
+name: Security Scan
 
 on:
   push:
@@ -39,7 +39,13 @@ jobs:
 
     - name: "Package into a jar"
       run: LEIN_SNAPSHOTS_IN_RELEASE=true DEBUG=1 lein uberjar
-      
+
+    - name: "Fossa branch fix"
+      if: ${{ github.event_name == 'pull_request' }}
+      run: |
+        git fetch
+        git branch --track ${GITHUB_HEAD_REF##*/} origin/${GITHUB_HEAD_REF##*/}
+        git checkout ${GITHUB_HEAD_REF##*/}
     - name: "Run FOSSA Scan"
       uses: fossas/fossa-action@v1
       with:
