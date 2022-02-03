@@ -41,8 +41,12 @@ jobs:
             clojure -X:deps prep
             cd ../..
             clojure -T:build uberjar
-            cp metabase.jar ../
+            cp target/uberjar/metabase.jar ../
             
+    - name: "Get firebolt jar"
+      run: |
+            curl https://firebolt-publishing-public.s3.amazonaws.com/repo/jdbc/firebolt-jdbc-1.22-jar-with-dependencies.jar --output firebolt-jdbc-1.22-jar-with-dependencies.jar
+    
     - name: Install dependencies
       run: lein deps
     - name: Run tests
