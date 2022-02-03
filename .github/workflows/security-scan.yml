@@ -8,7 +8,7 @@ on:
 
 jobs:
   build-metabase:
-    uses: firebolt-db/metabase-firebolt-driver/.github/workflows/build-metabase.yml@security-scan
+    uses: firebolt-db/metabase-firebolt-driver/.github/workflows/build-metabase.yml@security-scan-wf
     with:
       version: v0.41.6
 
