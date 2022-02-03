@@ -1,0 +1,65 @@
+name: Build Clojure Project
+
+on:
+  workflow_call:
+    outputs:
+      jar-path:
+        description: "Genarated jar path"
+        value: ${{ jobs.build.outputs.jar_file }}
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: "Checkout Metabase Code"
+      uses: actions/checkout@v2
+      with:
+        repository: metabase/metabase
+        path: metabase
+
+    - name: Prepare java
+      uses: actions/setup-java@v2
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+
+    - name: Install clojure tools
+      uses: DeLaGuardo/setup-clojure@3.7
+      with:
+        # Install just one or all simultaneously
+        cli: 'latest' # Clojure CLI based on tools.deps
+        lein: 'latest'     # or use 'latest' to always provision latest version of leiningen
+
+    - name: "Build metabase"
+      run: |
+            cd metabase
+            clojure -X:deps prep
+            cd modules/drivers
+            clojure -X:deps prep
+            cd ../..
+            clojure -T:build uberjar
+            cp target/uberjar/metabase.jar ../
+            cd ../
+            rm -r metabase
+
+    - name: "Get firebolt jar"
+      run: |
+            curl https://firebolt-publishing-public.s3.amazonaws.com/repo/jdbc/firebolt-jdbc-1.25-jar-with-dependencies.jar --output firebolt-jdbc-1.25-jar-with-dependencies.jar
+
+    - name: "Maven install"
+      run: |
+           mkdir repo
+           mvn deploy:deploy-file -Durl=file:repo -DgroupId=com.firebolt -DartifactId=metabase-core -Dversion=1.40 -Dpackaging=jar -Dfile=metabase.jar
+           mvn deploy:deploy-file -Durl=file:repo -DgroupId=com.firebolt -DartifactId=firebolt-jdbc -Dversion=1.0.0 -Dpackaging=jar -Dfile=firebolt-jdbc-1.25-jar-with-dependencies.jar
+
+    - name: "Install dependencies"
+      run: lein deps
+
+    - name: "Package into a jar"
+      run: LEIN_SNAPSHOTS_IN_RELEASE=true DEBUG=1 lein uberjar
+
+    - name: "Set output"
+      run: echo "::set-output name=jar_file::./target/uberjar/firebolt.metabase-driver.jar"
