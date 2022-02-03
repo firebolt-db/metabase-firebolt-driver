@@ -17,7 +17,7 @@ jobs:
     - name: "Checkout Metabase Code"
       uses: actions/checkout@v2
       with:
-        repository: https://github.com/metabase/metabase
+        repository: metabase/metabase
         path: metabase
 
     - name: "Build metabase"
