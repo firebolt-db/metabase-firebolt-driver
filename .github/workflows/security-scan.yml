@@ -13,6 +13,23 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    
+    - name: "Checkout Metabase Code"
+      uses: actions/checkout@v2
+      with:
+        repository: https://github.com/metabase/metabase
+        path: metabase
+
+    - name: "Build metabase"
+      run: |
+            cd metabase
+            clojure -X:deps prep
+            cd modules/drivers
+            clojure -X:deps prep
+            cd ../..
+            clojure -T:build uberjar
+            cp metabase.jar ../
+            
     - name: Install dependencies
       run: lein deps
     - name: Run tests
