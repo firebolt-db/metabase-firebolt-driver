@@ -27,7 +27,7 @@
              [honeysql-extensions :as hx]
              [ssh :as ssh]]
             [metabase.models
-             [table :as table :refer [Table]]]
+             [field :as field :refer [Field]]]
             [metabase.mbql.util :as mbql.u]
             [metabase.query-processor.util :as qputil]
             [toucan.db :as db]
@@ -177,8 +177,6 @@
 ;;; ------------------------------------------------- query handling -------------------------------------------------
 
 (models/defmodel Table :metabase_table)
-
-(models/defmodel F :metabase_table)
 
 ; ignore the schema when producing the identifier
 (defn qualified-name-components
