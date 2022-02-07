@@ -1,6 +1,7 @@
 name: Build a metabase jar
 
 on:
+  pull_request:
   workflow_dispatch:
     inputs:
       metabase-version:
@@ -16,7 +17,8 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: metabase/metabase
-          ref: ${{ inputs.metabase-version }}
+          # ref: ${{ inputs.metabase-version }}
+          ref: "v0.41.6"
 
       - name: Checkout firebolt connector code
         uses: actions/checkout@v2
