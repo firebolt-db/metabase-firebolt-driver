@@ -55,10 +55,10 @@ jobs:
       - name: Add firebolt driver imports to metabase
         shell: bash
         run: |
-              sed -i .bkp '2s#$#\n  metabase/firebolt           {:local/root "firebolt"}#' modules/drivers/deps.edn
-              sed -i .bkp '261s#$#\n    "modules/drivers/firebolt/test"#' deps.edn
-              sed -i .bkp '299s#$#\n                                 "modules/drivers/firebolt/src"#' deps.edn
-              sed -i .bkp 's/api\.app\.firebolt\.io/api\.dev\.firebolt\.io/'  modules/drivers/firebolt/src/metabase/driver/firebolt.clj
+              sed --in_place '2s#$#\n  metabase/firebolt           {:local/root "firebolt"}#' modules/drivers/deps.edn
+              sed --in_place '261s#$#\n    "modules/drivers/firebolt/test"#' deps.edn
+              sed --in_place '299s#$#\n                                 "modules/drivers/firebolt/src"#' deps.edn
+              sed --in_place 's/api.app.firebolt.io/api.dev.firebolt.io/'  modules/drivers/firebolt/src/metabase/driver/firebolt.clj
 
       - name: Setup database and engine
         id: setup
