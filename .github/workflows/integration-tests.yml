@@ -72,4 +72,4 @@ jobs:
       - name: Run metabase integration tests
         shell: bash
         run: |
-              DRIVERS=firebolt MB_FIREBOLT_TEST_HOST=api.dev.firebolt.io MB_FIREBOLT_TEST_PORT=8123 MB_FIREBOLT_TEST_USER=${{ secrets.FIREBOLT_USERNAME }} MB_FIREBOLT_TEST_PASSWORD=${{ secrets.FIREBOLT_PASSWORD }} MB_FIREBOLT_TEST_DB=${{ steps.setup.outputs.database_name }} clojure -X:dev:drivers:drivers-dev:test
+              DRIVERS=firebolt MB_FIREBOLT_TEST_HOST=api.dev.firebolt.io MB_FIREBOLT_TEST_PORT=8123 MB_FIREBOLT_TEST_USER=${{ secrets.FIREBOLT_USERNAME }} MB_FIREBOLT_TEST_PASSWORD="${{ secrets.FIREBOLT_PASSWORD }}" MB_FIREBOLT_TEST_DB="${{ steps.setup.outputs.database_name }}" clojure -X:dev:drivers:drivers-dev:test
