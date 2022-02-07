@@ -2,7 +2,7 @@
  ["src" "resources"]
 
  :deps
- {com.firebolt/firebolt-jdbc {:local/root "firebolt-jdbc-1.22-jar-with-dependencies.jar"}}
+ {com.firebolt/firebolt-jdbc {:local/root "firebolt-jdbc-1.25-jar-with-dependencies.jar"}}
 
  ;; build the driver with clojure -X:build
  :aliases
