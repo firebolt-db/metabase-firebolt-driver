@@ -58,7 +58,7 @@ jobs:
               sed -i .bkp '2s#$#\n  metabase/firebolt           {:local/root "firebolt"}#' modules/drivers/deps.edn
               sed -i .bkp '261s#$#\n    "modules/drivers/firebolt/test"#' deps.edn
               sed -i .bkp '299s#$#\n                                 "modules/drivers/firebolt/src"#' deps.edn
-              sed -i .bkp 's/api.app.firebolt.io/api.dev.firebolt.io/'  modules/drivers/firebolt/src/metabase/driver/firebolt.clj
+              sed -i .bkp 's/api\.app\.firebolt\.io/api\.dev\.firebolt\.io/'  modules/drivers/firebolt/src/metabase/driver/firebolt.clj
 
       - name: Setup database and engine
         id: setup
