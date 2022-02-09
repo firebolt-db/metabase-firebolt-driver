@@ -46,8 +46,8 @@
       :or    {db ""}
       :as   details}]
   (let [spec {:classname "com.firebolt.FireboltDriver", :subprotocol "firebolt", :subname (str "//api.app.firebolt.io/" db), :ssl true}]
-    (-> (merge spec (select-keys details [:password :classname :subprotocol :user :subname]))
-        (sql-jdbc.common/handle-additional-options  (select-keys details [:password :classname :subprotocol :user :subname]))
+    (-> (merge spec (select-keys details [:password :classname :subprotocol :user :subname :additional-options]))
+        (sql-jdbc.common/handle-additional-options  (select-keys details [:password :classname :subprotocol :user :subname :additional-options]))
         )))
 
 ; Testing the firebolt database connection

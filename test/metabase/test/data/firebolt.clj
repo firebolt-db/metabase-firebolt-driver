@@ -32,12 +32,12 @@
 ; Return the connection details map that should be used to connect to the Databas
 (defmethod tx/dbdef->connection-details :firebolt
   [_ context {:keys [database-name]}]
-  (merge {:user     (tx/db-test-env-var-or-throw :firebolt :user)
-          :host     (tx/db-test-env-var-or-throw :firebolt :host)
-          :port     (tx/db-test-env-var-or-throw :firebolt :port)
-          :password (tx/db-test-env-var-or-throw :firebolt :password)
-          :db       (tx/db-test-env-var-or-throw :firebolt :db)}))
-
+  (merge {:user               (tx/db-test-env-var-or-throw :firebolt :user)
+          :host               (tx/db-test-env-var-or-throw :firebolt :host)
+          :port               (tx/db-test-env-var-or-throw :firebolt :port)
+          :password           (tx/db-test-env-var-or-throw :firebolt :password)
+          :db                 (tx/db-test-env-var-or-throw :firebolt :db)
+          :additional-options (tx/db-test-env-var-or-throw :firebolt :additional-options)}))
 ;;; ----------------------------------------------- Sync -----------------------------------------------
 
 ; Map firebolt data types to base type

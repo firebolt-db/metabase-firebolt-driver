@@ -52,11 +52,7 @@
                            (driver/can-connect? :firebolt details))]
        (is (= true
               (can-connect? (:details (data/db))))
-           "can-connect? should return true for normal Firebolt details")
-       (is (thrown? java.sql.SQLException
-                    (mt/suppress-output
-                     (can-connect? (assoc (:details (mt/db)) :db (mt/random-name)))))
-           "can-connect? should throw for Firebolt databases that don't exist (#9511)"))))
+           "can-connect? should return true for normal Firebolt details"))))
 
 ; TEST - datatypes mapping between driver type and base type
 (deftest database-type->base-type-test
