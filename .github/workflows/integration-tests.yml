@@ -1,0 +1,68 @@
+name: Run integration tests
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout Metabase Code"
+        uses: actions/checkout@v2
+        with:
+          repository: metabase/metabase
+          ref: "v0.41.6"
+
+      - name: Checkout firebolt connector code
+        uses: actions/checkout@v2
+        with:
+          path: modules/drivers/firebolt
+
+      - name: Prepare java
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Install clojure tools
+        uses: DeLaGuardo/setup-clojure@3.7
+        with:
+          # Install just one or all simultaneously
+          cli: 'latest' # Clojure CLI based on tools.deps
+          lein: 'latest'     # or use 'latest' to always provision latest version of leiningen
+
+      - name: "Build metabase"
+        shell: bash
+        run: |
+              clojure -X:deps prep
+              cd modules/drivers
+              clojure -X:deps prep
+              cd ../..
+
+      - name: Add firebolt jdbc to metabase module
+        shell: bash
+        run: |
+              curl https://firebolt-publishing-public.s3.amazonaws.com/repo/jdbc/firebolt-jdbc-1.25-jar-with-dependencies.jar --output modules/drivers/firebolt/firebolt-jdbc-1.25-jar-with-dependencies.jar
+
+
+      - name: Add firebolt driver imports to metabase
+        shell: bash
+        run: |
+              sed --in-place '2s#$#\n  metabase/firebolt           {:local/root "firebolt"}#' modules/drivers/deps.edn
+              sed --in-place '261s#$#\n    "modules/drivers/firebolt/test"#' deps.edn
+              sed --in-place '299s#$#\n                                 "modules/drivers/firebolt/src"#' deps.edn
+              sed --in-place 's/api.app.firebolt.io/api.dev.firebolt.io/'  modules/drivers/firebolt/src/metabase/driver/firebolt.clj
+
+      - name: Setup database and engine
+        id: setup
+        uses: firebolt-db/integration-testing-setup@master
+        with:
+          firebolt-username: ${{ secrets.FIREBOLT_USERNAME }}
+          firebolt-password: ${{ secrets.FIREBOLT_PASSWORD }}
+          api-endpoint: "api.dev.firebolt.io"
+          region: "us-east-1"
+
+      - name: Run metabase integration tests
+        shell: bash
+        run: |
+              DRIVERS=firebolt MB_FIREBOLT_TEST_HOST=api.dev.firebolt.io MB_FIREBOLT_TEST_PORT=8123 MB_FIREBOLT_TEST_USER=${{ secrets.FIREBOLT_USERNAME }} MB_FIREBOLT_TEST_PASSWORD="${{ secrets.FIREBOLT_PASSWORD }}" MB_FIREBOLT_TEST_DB="${{ steps.setup.outputs.database_name }}" clojure -X:dev:drivers:drivers-dev:test
