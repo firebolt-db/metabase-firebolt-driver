@@ -2,10 +2,12 @@ name: Build connector
 
 on:
   workflow_dispatch:
-    metabase-version:
-      required: true
-      type: string
-      default: v0.41.6
+    inputs:
+      metabase-version:
+        required: true
+        description: Metabase version to compile with
+        type: string
+        default: v0.41.6
 
 jobs:
   build-metabase:
