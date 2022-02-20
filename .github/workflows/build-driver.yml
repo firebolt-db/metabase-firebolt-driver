@@ -42,8 +42,13 @@ jobs:
     - name: "Package into a jar"
       run: LEIN_SNAPSHOTS_IN_RELEASE=true DEBUG=1 lein uberjar
 
+    - name: Get version
+      id: get-version
+      run: |
+        echo "::set-output name=version::$(clj -e '(-> \"./project.clj\" slurp read-string (nth 2))' | tr -d '\"')"
+
     - name: Upload resulting jar file
       uses: actions/upload-artifact@v2
       with:
         name: firebolt.metabase-driver.jar
-        path: target/uberjar/firebolt.metabase-driver.jar
+        path: target/uberjar/firebolt.metabase-driver-${{steps.get-version.outputs.version}}.jar
