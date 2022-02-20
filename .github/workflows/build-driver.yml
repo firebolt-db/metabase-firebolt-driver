@@ -42,6 +42,11 @@ jobs:
     - name: "Package into a jar"
       run: LEIN_SNAPSHOTS_IN_RELEASE=true DEBUG=1 lein uberjar
 
+    - name: Install clojure tools
+      uses: DeLaGuardo/setup-clojure@3.7
+      with:
+        cli: 'latest'
+
     - name: Get version
       id: get-version
       run: |
