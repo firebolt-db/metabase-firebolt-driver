@@ -50,7 +50,7 @@ jobs:
     - name: Get version
       run: |
         clojure -e '(-> "./project.clj" slurp read-string (nth 2))'
-        version=$(clojure -e '(-> "./project.clj" slurp read-string (nth 2))' | tr -d '"'
+        version=$(clojure -e '(-> "./project.clj" slurp read-string (nth 2))' | tr -d '"')
         mv target/uberjar/firebolt.metabase-driver.jar target/uberjar/firebolt.metabase-driver-${version}.jar
 
     - name: Upload resulting jar file
