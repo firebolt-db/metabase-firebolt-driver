@@ -2,13 +2,16 @@ name: Build connector
 
 on:
   workflow_dispatch:
-  pull_request:
+    metabase-version:
+      required: true
+      type: string
+      default: v0.41.6
 
 jobs:
   build-metabase:
-    uses: firebolt-db/metabase-firebolt-driver/.github/workflows/build-metabase.yml@ci-build-connector
+    uses: firebolt-db/metabase-firebolt-driver/.github/workflows/build-metabase.yml@develop
     with:
-      version: v0.41.6
+      version: ${{ inputs.metabase-version }}
 
   build-connector:
     needs: build-metabase
