@@ -1,4 +1,4 @@
-name: Security Scan
+name: Build connector
 
 on:
   workflow_dispatch:
@@ -6,11 +6,11 @@ on:
 
 jobs:
   build-metabase:
-    uses: firebolt-db/metabase-firebolt-driver/.github/workflows/build-metabase.yml@develop
+    uses: firebolt-db/metabase-firebolt-driver/.github/workflows/build-metabase.yml@ci-build-connector
     with:
       version: v0.41.6
 
-  build:
+  build-connector:
     needs: build-metabase
     runs-on: ubuntu-latest    
     steps:
