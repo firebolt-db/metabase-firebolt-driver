@@ -54,3 +54,4 @@ jobs:
         with:
           name: metabase.jar
           path: target/uberjar/metabase.jar
+          retention-days: 1
