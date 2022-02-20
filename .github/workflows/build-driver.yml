@@ -51,10 +51,12 @@ jobs:
       id: get-version
       run: |
         clojure -e '(-> "./project.clj" slurp read-string (nth 2))'
-        echo "::set-output name=version::$(clojure -e '(-> "./project.clj" slurp read-string (nth 2))' | tr -d '"')"
+        version=$(clojure -e '(-> "./project.clj" slurp read-string (nth 2))' | tr -d '"')
+        mv target/uberjar/firebolt.metabase-driver.jar target/uberjar/firebolt.metabase-driver-${version}.jar
+        echo "::set-output name=version::${version}"
 
     - name: Upload resulting jar file
       uses: actions/upload-artifact@v2
       with:
         name: firebolt.metabase-driver-${{steps.get-version.outputs.version}}.jar
-        path: target/uberjar/firebolt.metabase-driver.jar
+        path: target/uberjar/firebolt.metabase-driver-${{steps.get-version.outputs.version}}.jar
