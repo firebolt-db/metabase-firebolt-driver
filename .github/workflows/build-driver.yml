@@ -1,0 +1,43 @@
+name: Security Scan
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-metabase:
+    uses: firebolt-db/metabase-firebolt-driver/.github/workflows/build-metabase.yml@develop
+    with:
+      version: v0.41.6
+
+  build:
+    needs: build-metabase
+    runs-on: ubuntu-latest    
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: "Download metabase jar"
+      uses: actions/download-artifact@v2
+      with:
+        name: metabase.jar
+            
+    - name: "Get firebolt jar"
+      run: |
+            curl https://firebolt-publishing-public.s3.amazonaws.com/repo/jdbc/firebolt-jdbc-1.25-jar-with-dependencies.jar --output firebolt-jdbc-1.25-jar-with-dependencies.jar
+
+    - name: "Maven install"
+      run: |    
+           mkdir repo
+           mvn deploy:deploy-file -Durl=file:repo -DgroupId=com.firebolt -DartifactId=metabase-core -Dversion=1.40 -Dpackaging=jar -Dfile=metabase.jar
+           mvn deploy:deploy-file -Durl=file:repo -DgroupId=com.firebolt -DartifactId=firebolt-jdbc -Dversion=1.0.0 -Dpackaging=jar -Dfile=firebolt-jdbc-1.25-jar-with-dependencies.jar
+
+    - name: "Install dependencies"
+      run: lein deps
+
+    - name: "Package into a jar"
+      run: LEIN_SNAPSHOTS_IN_RELEASE=true DEBUG=1 lein uberjar
+
+    - name: Upload resulting jar file
+      uses: actions/upload-artifact@v2
+      with:
+        name: firebolt.metabase-driver.jar
+        path: target/uberjar/firebolt.metabase-driver.jar
