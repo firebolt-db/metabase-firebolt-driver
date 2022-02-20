@@ -13,7 +13,7 @@ jobs:
   build-metabase:
     uses: firebolt-db/metabase-firebolt-driver/.github/workflows/build-metabase.yml@develop
     with:
-      version: ${{ inputs.metabase-version }}
+      version: ${{ github.event.inputs.metabase-version }}
 
   build-connector:
     needs: build-metabase
