@@ -42,8 +42,19 @@ jobs:
     - name: "Package into a jar"
       run: LEIN_SNAPSHOTS_IN_RELEASE=true DEBUG=1 lein uberjar
 
+    - name: Install clojure tools
+      uses: DeLaGuardo/setup-clojure@3.7
+      with:
+        cli: 'latest'
+
+    - name: Get version
+      id: get-version
+      run: |
+        clojure -e '(-> "./project.clj" slurp read-string (nth 2))'
+        echo "::set-output name=version::$(clojure -e '(-> "./project.clj" slurp read-string (nth 2))' | tr -d '"')"
+
     - name: Upload resulting jar file
       uses: actions/upload-artifact@v2
       with:
-        name: firebolt.metabase-driver.jar
+        name: firebolt.metabase-driver-${{steps.get-version.outputs.version}}.jar
         path: target/uberjar/firebolt.metabase-driver.jar
