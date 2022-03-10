@@ -8,7 +8,7 @@ on:
 
 jobs:
   build-metabase:
-    uses: firebolt-db/metabase-firebolt-driver/.github/workflows/build-metabase.yml@develop
+    uses: ./.github/workflows/build-metabase.yml
     with:
       version: v0.41.6
 
@@ -23,16 +23,11 @@ jobs:
       uses: actions/download-artifact@v2
       with:
         name: metabase.jar
-            
-    - name: "Get firebolt jar"
-      run: |
-            curl https://firebolt-publishing-public.s3.amazonaws.com/repo/jdbc/firebolt-jdbc-1.25-jar-with-dependencies.jar --output firebolt-jdbc-1.25-jar-with-dependencies.jar
 
     - name: "Maven install"
       run: |    
            mkdir repo
            mvn deploy:deploy-file -Durl=file:repo -DgroupId=com.firebolt -DartifactId=metabase-core -Dversion=1.40 -Dpackaging=jar -Dfile=metabase.jar
-           mvn deploy:deploy-file -Durl=file:repo -DgroupId=com.firebolt -DartifactId=firebolt-jdbc -Dversion=1.0.0 -Dpackaging=jar -Dfile=firebolt-jdbc-1.25-jar-with-dependencies.jar
 
     - name: "Install dependencies"
       run: lein deps
