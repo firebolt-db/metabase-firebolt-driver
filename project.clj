@@ -2,9 +2,17 @@
   :min-lein-version "2.5.0"
 
   :dependencies
-  [[com.firebolt/firebolt-jdbc "1.0.0"]]
+  [[com.firebolt/firebolt-jdbc "1.25"]]
 
-  :repositories {"project" "file:repo"}
+  :repositories [["snapshots" {:sign-releases false
+                               :url "https://repo.repsy.io/mvn/firebolt/maven-snapshots"
+                               :username :env/REPSY_USER
+                               :password :env/REPSY_PASSWORD}]
+                 ["releases" {:sign-releases false
+                              :url "https://repo.repsy.io/mvn/firebolt/maven"
+                              :username :env/REPSY_USER
+                              :password :env/REPSY_PASSWORD}]
+                 ["project" "file:repo"]]
 
   :aliases
     {"test"       ["with-profile" "test"]}
