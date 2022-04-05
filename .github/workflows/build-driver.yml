@@ -45,6 +45,7 @@ jobs:
     - name: Get version
       id: get-version
       run: |
+        lein deps
         clojure -e '(-> "./project.clj" slurp read-string (nth 2))'
         version=$(clojure -e '(-> "./project.clj" slurp read-string (nth 2))' | tr -d '"')
         mv target/uberjar/firebolt.metabase-driver.jar target/uberjar/firebolt.metabase-driver-${version}.jar
