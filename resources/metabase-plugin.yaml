@@ -2,6 +2,9 @@ info:
   name: Metabase Firebolt Driver
   version: 1.0.0
   description: Allows Metabase to connect to Firebolt databases.
+contact-info:
+  name: Firebolt Analytics, Inc.
+  info: ecosystem@firebolt.com
 driver:
   name: firebolt
   display-name: Firebolt
