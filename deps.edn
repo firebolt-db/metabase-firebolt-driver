@@ -3,6 +3,8 @@
 
  :deps
  {com.firebolt/firebolt-jdbc {:local/root "firebolt-jdbc-1.25-jar-with-dependencies.jar"}}
+ :mvn/repos
+ {"releases" {:url "https://repo.repsy.io/mvn/firebolt/maven"}}
 
  ;; build the driver with clojure -X:build
  :aliases
