@@ -2,7 +2,7 @@
  ["src" "resources"]
 
  :deps
- {com.firebolt/firebolt-jdbc {:local/root "firebolt-jdbc-1.25-jar-with-dependencies.jar"}}
+ {com.firebolt/firebolt-jdbc {:mvn/version "1.25"}}
  :mvn/repos
  {"releases" {:url "https://repo.repsy.io/mvn/firebolt/maven"}}
 
