@@ -81,3 +81,7 @@ You should see a message on startup similar to:
 2019-05-07 23:27:32 INFO plugins.lazy-loaded-driver :: Registering lazy loading driver :firebolt...
 2019-05-07 23:27:32 INFO metabase.driver :: Registered driver :firebolt (parents: #{:sql-jdbc}) 🚚
 ```
+
+## Contributing
+
+See: [CONTRIBUTING.MD](https://github.com/firebolt-db/metabase-firebolt-driver/tree/main/CONTRIBUTING.MD)
