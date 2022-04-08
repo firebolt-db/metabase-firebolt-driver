@@ -4,7 +4,7 @@ info:
   description: Allows Metabase to connect to Firebolt databases.
 contact-info:
   name: Firebolt Analytics, Inc.
-  info: ecosystem@firebolt.com
+  address: ecosystem@firebolt.com
 driver:
   name: firebolt
   display-name: Firebolt
