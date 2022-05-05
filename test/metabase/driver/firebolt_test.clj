@@ -136,7 +136,10 @@
   (is (= false
          (driver/supports? :firebolt :nested-queries)))
   (is (= true
-         (driver/supports? :firebolt :binning))))
+         (driver/supports? :firebolt :binning)))
+  (is (= true
+         (driver/supports? :firebolt :regex))))
+
 
 (deftest ddl-statements-test
   (testing "make sure we didn't break the code that is used to generate DDL statements when we add new test datasets"
