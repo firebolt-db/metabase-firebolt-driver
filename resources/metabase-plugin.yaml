@@ -25,4 +25,4 @@ init:
   - step: load-namespace
     namespace: metabase.driver.firebolt
   - step: register-jdbc-driver
-    class: com.firebolt.FireboltDriver
+    class: io.firebolt.FireboltDriver

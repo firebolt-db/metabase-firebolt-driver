@@ -45,7 +45,7 @@
   [_ {:keys [db]
       :or    {db ""}
       :as   details}]
-  (let [spec {:classname "com.firebolt.FireboltDriver", :subprotocol "firebolt", :subname (str "//api.app.firebolt.io/" db), :ssl true}]
+  (let [spec {:classname "io.firebolt.FireboltDriver", :subprotocol "firebolt", :subname (str "//api.dev.firebolt.io/" db), :ssl true}]
     (-> (merge spec (select-keys details [:password :classname :subprotocol :user :subname :additional-options]))
         (sql-jdbc.common/handle-additional-options  (select-keys details [:password :classname :subprotocol :user :subname :additional-options]))
         )))
@@ -60,17 +60,20 @@
 ; Define mapping of firebolt data types to base type
 (def ^:private database-type->base-type
   (sql-jdbc.sync/pattern-based-database-type->base-type
-    [[#"Array"              :type/Array]
-     [#"Int64"              :type/BigInteger]
-     [#"UInt64"             :type/BigInteger]
-     [#"Int"                :type/Integer]
-     [#"Float"              :type/Float]
-     [#"String"             :type/Text]
-     [#"DateTime"           :type/DateTime]
-     [#"Date"               :type/Date]
-     [#"UUID"               :type/UUID]
-     [#"Decimal"            :type/Decimal]
-     ]))
+   [[#"ARRAY"               :type/Array]
+    [#"BIGINT"              :type/BigInteger]
+    [#"TUPLE"               :type/Text]
+    [#"INTEGER"             :type/Integer]
+    [#"DOUBLE"              :type/Decimal]
+    [#"FLOAT"               :type/Float]
+    [#"STRING"              :type/Text]
+    [#"TIMESTAMP"           :type/DateTime]
+    [#"TIMESTAMP_EXT"       :type/DateTime]
+    [#"DATE"                :type/Date]
+    [#"DATE_EXT"            :type/Date]
+    [#"DECIMAL"             :type/Decimal]
+    [#"BOOLEAN"             :type/Boolean]
+    ]))
 
 ; Map firebolt data types to base types
 (defmethod sql-jdbc.sync/database-type->base-type :firebolt [_ database-type]
@@ -210,18 +213,6 @@
   [driver [_ arg pattern]]
   (hsql/call :extract_all (sql.qp/->honeysql driver arg) (sql.qp/->honeysql driver pattern)))
 
-;;; ------- Methods to handle Views, Describe database to not return Agg and Join indexes in Firebolt ----------------
-;;; All the functions below belong to describe-table.clj which are all private in metabase and cant be called or
-;;; extended directly. Hence needed to implement the entire function chain
-(defmethod driver/describe-database :firebolt
-  [_ {:keys [details] :as database}]
-  {:tables
-   (with-open [conn (jdbc/get-connection (sql-jdbc.conn/db->pooled-connection-spec database))]
-     (set/union
-      (set (for [{:keys [database table_name]} (jdbc/query {:connection conn} ["show tables"])]
-             {:name table_name :schema (when (seq database) database)}))
-      (set(for [{:keys [database view_name]} (jdbc/query {:connection conn} ["show views"])]
-            {:name view_name :schema (when (seq database) database)}))))})
 
 (defn- database-type->base-type-or-warn
   "Given a `database-type` (e.g. `VARCHAR`) return the mapped Metabase type (e.g. `:type/Text`)."
@@ -358,7 +349,7 @@
 
 (defmethod driver/supports? [:firebolt :binning]  [_ _] true)
 
-(defmethod driver/supports? [:firebolt :regex]  [_ _] false)
+(defmethod driver/supports? [:firebolt :regex]  [_ _] true)
 
 (defmethod driver/supports? [:firebolt :standard-deviation-aggregations]  [_ _] false)
 

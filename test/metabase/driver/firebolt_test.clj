@@ -35,7 +35,7 @@
 (deftest connection-details->spec-test
   (doseq [[^String expected-spec details]
           [[
-             {:classname "com.firebolt.FireboltDriver",
+             {:classname "io.firebolt.FireboltDriver",
               :ssl true,
               :subname "//api.app.firebolt.io/",
               :subprotocol "firebolt"}
