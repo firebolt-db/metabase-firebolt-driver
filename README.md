@@ -2,25 +2,7 @@
 
 ## Installation
 
-Beginning with Metabase 0.32, drivers must be stored in a `plugins` directory in the same directory where `metabase.jar` is, or you can specify the directory by setting the environment variable `MB_PLUGINS_DIR`. There are a few options to get up and running with a custom driver.
-
-### Download Metabase Jar and Run
-
-1. Download a fairly recent Metabase binary release (jar file) from the [Metabase distribution page](https://metabase.com/start/jar.html).
-2. Download the Firebolt driver jar from the ["Firebolt Driver"](https://drive.google.com/drive/u/0/folders/1ybVU7sViEcgYQ0J6-effFt_6uGJZFt3o).
-3. Download the firebolt jdbc driver jar from the ["Firebolt JDBC Driver"](https://docs.firebolt.io/integrations/connecting-via-jdbc).
-4. Create a directory and copy the `metabase.jar` to it.
-5. In that directory create a sub-directory called `plugins`.
-6. Copy the Firebolt driver jar and Firebolt jdbc driver jar to the `plugins` directory.
-7. Make sure you are the in the directory where your `metabase.jar` lives.
-8. Run `java -jar metabase.jar`.
-
-In either case, you should see a message on startup similar to:
-
-```
-04-15 06:14:08 DEBUG plugins.lazy-loaded-driver :: Registering lazy loading driver :firebolt...
-04-15 06:14:08 INFO driver.impl :: Registered driver :firebolt (parents: [:sql-jdbc]) 🚚
-```
+Please follow Firebolt's [documentation](https://docs.firebolt.io/integrations/business-intelligence/connecting-to-metabase.html) to install the Metabase Firebolt driver on your Metabase instance. If you are using Metabase Cloud, no installation is required since the driver comes preinstalled.
 
 ## Configuring
 
