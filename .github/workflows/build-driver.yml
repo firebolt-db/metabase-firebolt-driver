@@ -7,7 +7,7 @@ on:
         required: true
         description: Metabase version to compile with
         type: string
-        default: v0.41.6
+        default: v0.44.0
 
 jobs:
   build-metabase:

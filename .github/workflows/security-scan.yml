@@ -10,7 +10,7 @@ jobs:
   build-metabase:
     uses: ./.github/workflows/build-metabase.yml
     with:
-      version: v0.41.6
+      version: v0.44.0
 
   security-scan:
     needs: build-metabase
