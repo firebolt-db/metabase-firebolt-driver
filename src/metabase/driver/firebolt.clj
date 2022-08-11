@@ -60,17 +60,20 @@
 ; Define mapping of firebolt data types to base type
 (def ^:private database-type->base-type
   (sql-jdbc.sync/pattern-based-database-type->base-type
-    [[#"Array"              :type/Array]
-     [#"Int64"              :type/BigInteger]
-     [#"UInt64"             :type/BigInteger]
-     [#"Int"                :type/Integer]
-     [#"Float"              :type/Float]
-     [#"String"             :type/Text]
-     [#"DateTime"           :type/DateTime]
-     [#"Date"               :type/Date]
-     [#"UUID"               :type/UUID]
-     [#"Decimal"            :type/Decimal]
-     ]))
+   [[#"ARRAY"              :type/Array]
+    [#"BIGINT"             :type/BigInteger]
+    [#"TUPLE"              :type/Text]
+    [#"INTEGER"            :type/Integer]
+    [#"DOUBLE"             :type/Decimal]
+    [#"FLOAT"              :type/Float]
+    [#"STRING"             :type/Text]
+    [#"TIMESTAMP"          :type/DateTime]
+    [#"TIMESTAMP_EXT"      :type/DateTime]
+    [#"DATE"               :type/Date]
+    [#"DATE_EXT"           :type/Date]
+    [#"DECIMAL"            :type/Decimal]
+    [#"BOOLEAN"            :type/Boolean]
+    ]))
 
 ; Map firebolt data types to base types
 (defmethod sql-jdbc.sync/database-type->base-type :firebolt [_ database-type]
