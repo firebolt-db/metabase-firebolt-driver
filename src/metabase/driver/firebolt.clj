@@ -45,36 +45,39 @@
   [_ {:keys [db]
       :or    {db ""}
       :as   details}]
-  (let [spec {:classname "com.firebolt.FireboltDriver", :subprotocol "firebolt", :subname (str "//api.app.firebolt.io/" db), :ssl true}]
+  (let [spec {:classname "com.firebolt.FireboltDriver", :subprotocol "firebolt", :subname (str "//api.staging.firebolt.io/" db), :ssl true}]
     (-> (merge spec (select-keys details [:password :classname :subprotocol :user :subname :additional-options]))
         (sql-jdbc.common/handle-additional-options  (select-keys details [:password :classname :subprotocol :user :subname :additional-options]))
         )))
 
 ; Testing the firebolt database connection
 (defmethod driver/can-connect? :firebolt [driver details]
-   (let [connection (sql-jdbc.conn/connection-details->spec driver (ssh/include-ssh-tunnel! details))]
-     (= 1 (first (vals (first (jdbc/query connection ["SELECT 1"])))))))
+  (let [connection (sql-jdbc.conn/connection-details->spec driver (ssh/include-ssh-tunnel! details))]
+    (= 1 (first (vals (first (jdbc/query connection ["SELECT 1"])))))))
 
 ;;; ------------------------------------------------- sql-jdbc.sync --------------------------------------------------
 
 ; Define mapping of firebolt data types to base type
 (def ^:private database-type->base-type
   (sql-jdbc.sync/pattern-based-database-type->base-type
-    [[#"Array"              :type/Array]
-     [#"Int64"              :type/BigInteger]
-     [#"UInt64"             :type/BigInteger]
-     [#"Int"                :type/Integer]
-     [#"Float"              :type/Float]
-     [#"String"             :type/Text]
-     [#"DateTime"           :type/DateTime]
-     [#"Date"               :type/Date]
-     [#"UUID"               :type/UUID]
-     [#"Decimal"            :type/Decimal]
-     ]))
+   [[#"ARRAY"              :type/Array]
+    [#"BIGINT"             :type/BigInteger]
+    [#"TUPLE"              :type/Text]
+    [#"INTEGER"            :type/Integer]
+    [#"DOUBLE"             :type/Decimal]
+    [#"FLOAT"              :type/Float]
+    [#"STRING"             :type/Text]
+    [#"TIMESTAMP"          :type/DateTime]
+    [#"TIMESTAMP_EXT"      :type/DateTime]
+    [#"DATE"               :type/Date]
+    [#"DATE_EXT"           :type/Date]
+    [#"DECIMAL"            :type/Decimal]
+    [#"BOOLEAN"            :type/Boolean]
+    ]))
 
 ; Map firebolt data types to base types
 (defmethod sql-jdbc.sync/database-type->base-type :firebolt [_ database-type]
-   (database-type->base-type database-type))
+  (database-type->base-type database-type))
 
 ; Concatenate the elements of an array based on array elemets type (coverting array data type to string type to apply filter on array data)
 (defn is-string-array? [os]
@@ -82,10 +85,10 @@
 
 ; Handle array data type
 (defmethod metabase.driver.sql-jdbc.execute/read-column-thunk [:firebolt Types/ARRAY]
-   [_ ^ResultSet rs _ ^Integer i]
-   (fn []
-     (def os (object-array (.getArray (.getArray rs i))))
-     (is-string-array? os)))
+  [_ ^ResultSet rs _ ^Integer i]
+  (fn []
+    (def os (object-array (.getArray (.getArray rs i))))
+    (is-string-array? os)))
 
 ; Helpers for Date extraction
 
@@ -127,16 +130,16 @@
 
 ; Return a HoneySQL form that performs represents addition of some temporal interval to the original `hsql-form'.
 (defmethod sql.qp/add-interval-honeysql-form :firebolt [driver hsql-form amount unit]
-   (if (= unit :quarter)
-     (recur driver hsql-form (hx/* amount 3) :month)
-     (hsql/call :date_add
-                (hx/literal (name unit))
-                (hsql/raw (int amount))
-                (hx/->timestamp hsql-form))))
+  (if (= unit :quarter)
+    (recur driver hsql-form (hx/* amount 3) :month)
+    (hsql/call :date_add
+               (hx/literal (name unit))
+               (hsql/raw (int amount))
+               (hx/->timestamp hsql-form))))
 
 ; Helper function to get the current datetime in honeysql form
 (defmethod sql.qp/current-datetime-honeysql-form :firebolt [_]
-   (hx/cast :timestamp (hsql/raw "NOW()")))
+  (hx/cast :timestamp (hsql/raw "NOW()")))
 
 ; Return a native query that will fetch the current time
 (defmethod driver.common/current-db-time-native-query :firebolt [_]
@@ -144,7 +147,7 @@
 
 ; Time date formatters to parse the current time returned by `current-db-time-native-query`
 (defmethod driver.common/current-db-time-date-formatters :firebolt [_]
-   (driver.common/create-db-time-formatters "yyyy-MM-dd HH:mm:ss"))
+  (driver.common/create-db-time-formatters "yyyy-MM-dd HH:mm:ss"))
 
 ; Return the current time and timezone from the perspective of `database`
 (defmethod driver/current-db-time :firebolt [& args]
@@ -241,25 +244,25 @@
   ;; some DBs (:sqlite) don't actually return the correct metadata for LIMIT 0 queries
   (let [[sql & params] (i/fallback-metadata-query driver table-schema table-name)]
     (reify clojure.lang.IReduceInit
-      (reduce [_ rf init]
-        (with-open [stmt (common/prepare-statement driver conn sql params)
-                    rs   (.executeQuery stmt)]
-          (let [metadata (.getMetaData rs)]
-            (reduce
-             ((map (fn [^Integer i]
-                     {:name          (.getColumnName metadata i)
-                      :database-type (.getColumnTypeName metadata i)})) rf)
-             init
-             (range 1 (inc (.getColumnCount metadata))))))))))
+           (reduce [_ rf init]
+                   (with-open [stmt (common/prepare-statement driver conn sql params)
+                               rs   (.executeQuery stmt)]
+                     (let [metadata (.getMetaData rs)]
+                       (reduce
+                        ((map (fn [^Integer i]
+                                {:name          (.getColumnName metadata i)
+                                 :database-type (.getColumnTypeName metadata i)})) rf)
+                        init
+                        (range 1 (inc (.getColumnCount metadata))))))))))
 
 (defn- jdbc-fields-metadata
   "Reducible metadata about the Fields belonging to a Table, fetching using JDBC DatabaseMetaData methods."
   [driver ^Connection conn db-name-or-nil schema table-name]
   (common/reducible-results #(.getColumns (.getMetaData conn)
-                                          db-name-or-nil
-                                          (some->> schema (driver/escape-entity-name-for-metadata driver))
-                                          (some->> table-name (driver/escape-entity-name-for-metadata driver))
-                                          nil)
+                              db-name-or-nil
+                              (some->> schema (driver/escape-entity-name-for-metadata driver))
+                              (some->> table-name (driver/escape-entity-name-for-metadata driver))
+                              nil)
                             (fn [^ResultSet rs]
                               #(merge
                                 {:name          (.getString rs "COLUMN_NAME")
@@ -364,7 +367,6 @@
 (defmethod driver/supports? [:firebolt :set-timezone]  [_ _] false)
 
 (defmethod driver/supports? [:firebolt :nested-fields]  [_ _] false)
-
 
 
 

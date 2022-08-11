@@ -7,7 +7,7 @@ on:
         required: true
         description: Metabase version to compile with
         type: string
-        default: v0.41.6
+        default: v0.44.0
 
 jobs:
   build-metabase:
@@ -40,18 +40,18 @@ jobs:
     - name: Install clojure tools
       uses: DeLaGuardo/setup-clojure@3.7
       with:
-        cli: 'latest'
+        cli: '1.11.1.1155'
 
     - name: Get version
       id: get-version
       run: |
         clojure -e '(-> "./project.clj" slurp read-string (nth 2))'
         version=$(clojure -e '(-> "./project.clj" slurp read-string (nth 2))' | tr -d '"')
-        mv target/uberjar/firebolt.metabase-driver.jar target/uberjar/firebolt.metabase-driver-${version}.jar
+        mv target/default+uberjar/firebolt.metabase-driver.jar target/default+uberjar/firebolt.metabase-driver-${version}.jar
         echo "::set-output name=version::${version}"
 
     - name: Upload resulting jar file
       uses: actions/upload-artifact@v2
       with:
         name: firebolt.metabase-driver-${{steps.get-version.outputs.version}}.jar
-        path: target/uberjar/firebolt.metabase-driver-${{steps.get-version.outputs.version}}.jar
+        path: target/default+uberjar/firebolt.metabase-driver-${{steps.get-version.outputs.version}}.jar
