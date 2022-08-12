@@ -7,7 +7,7 @@ on:
         required: true
         description: Metabase version to compile with
         type: string
-        default: v0.44.0
+        default: v0.41.6
 
 jobs:
   build-metabase:
@@ -17,7 +17,7 @@ jobs:
 
   build-connector:
     needs: build-metabase
-    runs-on: ubuntu-latest    
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
 
@@ -27,7 +27,7 @@ jobs:
         name: metabase.jar
 
     - name: "Maven install"
-      run: |    
+      run: |
            mkdir repo
            mvn deploy:deploy-file -Durl=file:repo -DgroupId=com.firebolt -DartifactId=metabase-core -Dversion=1.40 -Dpackaging=jar -Dfile=metabase.jar
 

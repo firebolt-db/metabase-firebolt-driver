@@ -11,7 +11,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: metabase/metabase
-          ref: "v0.44.0"
+          ref: "v0.41.6"
 
       - name: Checkout firebolt connector code
         uses: actions/checkout@v2
@@ -45,7 +45,7 @@ jobs:
               sed --in-place '2s#$#\n  metabase/firebolt           {:local/root "firebolt"}#' modules/drivers/deps.edn
               sed --in-place '264s#$#\n    "modules/drivers/firebolt/test"#' deps.edn
               sed --in-place '299s#$#\n                                 "modules/drivers/firebolt/src"#' deps.edn
-              sed --in-place 's/api.app.firebolt.io/api.staging.firebolt.io/'  modules/drivers/firebolt/src/metabase/driver/firebolt.clj
+              sed --in-place 's/api.app.firebolt.io/api.dev.firebolt.io/'  modules/drivers/firebolt/src/metabase/driver/firebolt.clj
               sed --in-place '$ s/.$//' modules/drivers/deps.edn
               sed --in-place '$ a   :mvn/repos {"repsy" {:url "https://repo.repsy.io/mvn/firebolt/maven"}}}' modules/drivers/deps.edn
               sed --in-place '2s#$#\n :mvn/repos {"repsy" {:url "https://repo.repsy.io/mvn/firebolt/maven"}}#' bin/build-drivers/deps.edn
@@ -60,10 +60,10 @@ jobs:
         with:
           firebolt-username: ${{ secrets.FIREBOLT_USERNAME }}
           firebolt-password: ${{ secrets.FIREBOLT_PASSWORD }}
-          api-endpoint: "api.staging.firebolt.io"
+          api-endpoint: "api.dev.firebolt.io"
           region: "us-east-1"
 
       - name: Run metabase integration tests
         shell: bash
         run: |
-              DRIVERS=firebolt MB_FIREBOLT_TEST_HOST=api.staging.firebolt.io MB_FIREBOLT_TEST_PORT=8123 MB_FIREBOLT_TEST_USER=${{ secrets.FIREBOLT_USERNAME }} MB_FIREBOLT_TEST_PASSWORD="${{ secrets.FIREBOLT_PASSWORD }}" MB_FIREBOLT_TEST_DB=metabase_test MB_FIREBOLT_TEST_ADDITIONAL_OPTIONS=engine=metabase_test_general_purpose clojure -X:dev:drivers:drivers-dev:test :only metabase.pulse-test
+              DRIVERS=firebolt MB_FIREBOLT_TEST_HOST=api.dev.firebolt.io MB_FIREBOLT_TEST_PORT=8123 MB_FIREBOLT_TEST_USER=${{ secrets.FIREBOLT_USERNAME }} MB_FIREBOLT_TEST_PASSWORD="${{ secrets.FIREBOLT_PASSWORD }}" MB_FIREBOLT_TEST_DB=metabase_test MB_FIREBOLT_TEST_ADDITIONAL_OPTIONS=engine=metabase_test_general_purpose clojure -X:dev:drivers:drivers-dev:test :only metabase.pulse-test
