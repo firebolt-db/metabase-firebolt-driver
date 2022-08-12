@@ -59,13 +59,15 @@
   (testing "make sure the various types we use for running tests are actually mapped to the correct DB type"
      (are [db-type expected] (= expected
                                 (sql-jdbc.sync/database-type->base-type :firebolt db-type))
-                      :BIGINT :type/BigInteger
-                      :INTEGER :type/Integer
-                      :FLOAT :type/Float
-                      :STRING :type/Text
-                      :TIMESTAMP :type/DateTime
-                      :DATE :type/Date
-                      :DECIMAL :type/Decimal)))
+                      :Int64      :type/BigInteger
+                      :UInt64     :type/BigInteger
+                      :Int        :type/Integer
+                      :Float      :type/Float
+                      :String     :type/Text
+                      :DateTime   :type/DateTime
+                      :Date       :type/Date
+                      :UUID       :type/UUID
+                      :Decimal    :type/Decimal)))
 
 ; TEST - truncating date functions
 (deftest date-functions-test
