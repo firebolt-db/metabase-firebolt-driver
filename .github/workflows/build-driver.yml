@@ -1,75 +1,14 @@
-name: Build connector
+name: Build Metabase Firebolt Driver
 
 on:
-  workflow_dispatch:
-    inputs:
-      metabase-version:
-        required: true
-        description: Metabase version to compile with
-        type: string
-        default: v0.44.0
   workflow_call:
-    inputs:
-      metabase-version:
-        required: false
-        type: string
-        default: v0.44.0
     outputs:
       jar-name:
         description: Firebolt Driver jar
-        value: ${{ jobs.build-connector.outputs.jar-name }}
+        value: ${{ jobs.build-driver.outputs.jar-name }}
 
 jobs:
-  build-metabase:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Cache check
-        id: cache-metabase-jar
-        uses: actions/cache@v2
-        with:
-          path: target/uberjar/metabase.jar
-          key: ${{ inputs.metabase-version }}-metabase-jar
-
-      - name: "Checkout Metabase Code"
-        uses: actions/checkout@v2
-        if: steps.cache-metabase-jar.outputs.cache-hit != 'true'
-        with:
-          repository: metabase/metabase
-          ref: ${{ inputs.metabase-version }}
-
-      - name: Prepare java
-        uses: actions/setup-java@v2
-        if: steps.cache-metabase-jar.outputs.cache-hit != 'true'
-        with:
-          distribution: 'zulu'
-          java-version: '17'
-
-      - name: Install clojure tools
-        uses: DeLaGuardo/setup-clojure@3.7
-        if: steps.cache-metabase-jar.outputs.cache-hit != 'true'
-        with:
-          # Install just one or all simultaneously
-          cli: '1.11.1.1155' # Clojure CLI based on tools.deps
-          lein: '2.9.10'     # or use 'latest' to always provision latest version of leiningen
-
-      - name: "Build metabase"
-        if: steps.cache-metabase-jar.outputs.cache-hit != 'true'
-        run: |
-          clojure -X:deps prep
-          cd modules/drivers
-          clojure -X:deps prep
-          cd ../..
-          clojure -T:build uberjar
-
-      - name: Upload resulting jar file
-        uses: actions/upload-artifact@v2
-        with:
-          name: metabase.jar
-          path: target/uberjar/metabase.jar
-          retention-days: 1
-
-  build-connector:
-    needs: build-metabase
+  build-driver:
     runs-on: ubuntu-latest
     outputs:
       jar-name: firebolt.metabase-driver-${{steps.get-version.outputs.version}}.jar

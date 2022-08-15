@@ -14,6 +14,7 @@
             [honeysql.core :as hsql]
             [metabase.driver.sql.query-processor :as sql.qp]
             [metabase.test.data.sql :as sql.tx]
+            [metabase.test.data.interface :as tx]
             [metabase.test.data.dataset-definitions :as dataset-defs]
             [clojure.string :as str]
             [metabase.driver.common :as driver.common]
@@ -22,8 +23,6 @@
              [models :refer [Table]]
              [sync :as sync]
              [util :as u]]
-            [metabase.test.data
-             [interface :as tx]]
             [clojure.java.jdbc :as jdbc]
             [toucan.db :as db]
             [metabase.models

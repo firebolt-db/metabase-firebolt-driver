@@ -1,4 +1,4 @@
-name: Build a metabase jar
+name: Build Metabase jar
 
 on:
   workflow_call:
