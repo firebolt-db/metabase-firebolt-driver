@@ -1,8 +1,8 @@
 (ns metabase.test.data.firebolt
   (:require [metabase.test.data
-             [interface :as tx]
              [sql :as sql.tx]
              [sql-jdbc :as sql-jdbc.tx]]
+            [metabase.driver.ddl.interface :as tx]
             [clojure.set :as set]
             [metabase
              [config :as config]
@@ -55,7 +55,7 @@
 ;;; ----------------------------------------------- Query handling -----------------------------------------------
 
 ; Implement this because the tests try to add a table with a hyphen and Firebolt doesn't support that
-(defmethod metabase.driver.ddl.interface/format-name :firebolt
+(defmethod tx/format-name :firebolt
   [_ s]
   (clojure.string/replace (format "%s" s) #"-" "_"))
 
@@ -81,7 +81,7 @@
 ; Customize the create table to create DIMENSION TABLE
 (defmethod sql.tx/create-table-sql :firebolt
   [driver {:keys [database-name], :as dbdef} {:keys [table-name field-definitions]}]
-  (let [quote-name    #(sql.u/quote-name driver :field (metabase.driver.ddl.interface/format-name driver %))
+  (let [quote-name    #(sql.u/quote-name driver :field (tx/format-name driver %))
         pk-field-name (quote-name (sql.tx/pk-field-name driver))]
     (format "CREATE DIMENSION TABLE %s (%s %s, %s) PRIMARY INDEX %s"
             (sql.tx/qualify-and-quote driver database-name table-name)
