@@ -1,4 +1,4 @@
-name: Security Scan
+name: Build all and Scan
 
 on:
   push:
@@ -10,7 +10,7 @@ jobs:
   build-metabase:
     uses: ./.github/workflows/build-metabase.yml
     with:
-      version: v0.41.6
+      version: v0.44.0
 
   security-scan:
     needs: build-metabase
@@ -18,14 +18,14 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    
+
     - name: "Download metabase jar"
       uses: actions/download-artifact@v2
       with:
         name: metabase.jar
 
     - name: "Maven install"
-      run: |    
+      run: |
            mkdir repo
            mvn deploy:deploy-file -Durl=file:repo -DgroupId=com.firebolt -DartifactId=metabase-core -Dversion=1.40 -Dpackaging=jar -Dfile=metabase.jar
 
@@ -49,4 +49,4 @@ jobs:
       uses: fossas/fossa-action@v1
       with:
         api-key: ${{ secrets.FOSSA_TOKEN }}
-        run-tests: true 
+        run-tests: true

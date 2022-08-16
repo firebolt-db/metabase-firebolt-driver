@@ -14,6 +14,7 @@
             [honeysql.core :as hsql]
             [metabase.driver.sql.query-processor :as sql.qp]
             [metabase.test.data.sql :as sql.tx]
+            [metabase.test.data.interface :as tx]
             [metabase.test.data.dataset-definitions :as dataset-defs]
             [clojure.string :as str]
             [metabase.driver.common :as driver.common]
@@ -22,8 +23,6 @@
              [models :refer [Table]]
              [sync :as sync]
              [util :as u]]
-            [metabase.test.data
-             [interface :as tx]]
             [clojure.java.jdbc :as jdbc]
             [toucan.db :as db]
             [metabase.models
@@ -59,15 +58,13 @@
   (testing "make sure the various types we use for running tests are actually mapped to the correct DB type"
      (are [db-type expected] (= expected
                                 (sql-jdbc.sync/database-type->base-type :firebolt db-type))
-                      :Int64      :type/BigInteger
-                      :UInt64     :type/BigInteger
-                      :Int        :type/Integer
-                      :Float      :type/Float
-                      :String     :type/Text
-                      :DateTime   :type/DateTime
-                      :Date       :type/Date
-                      :UUID       :type/UUID
-                      :Decimal    :type/Decimal)))
+                      :BIGINT :type/BigInteger
+                      :INTEGER :type/Integer
+                      :FLOAT :type/Float
+                      :STRING :type/Text
+                      :TIMESTAMP :type/DateTime
+                      :DATE :type/Date
+                      :DECIMAL :type/Decimal)))
 
 ; TEST - truncating date functions
 (deftest date-functions-test
