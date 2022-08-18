@@ -6,12 +6,16 @@ on:
       jar-name:
         description: Firebolt Driver jar
         value: ${{ jobs.build-driver.outputs.jar-name }}
+      version:
+        description: Firebolt Driver version
+        value: ${{ jobs.build-driver.outputs.version }}
 
 jobs:
   build-driver:
     runs-on: ubuntu-latest
     outputs:
       jar-name: firebolt.metabase-driver-${{steps.get-version.outputs.version}}.jar
+      version: ${{steps.get-version.outputs.version}}
     steps:
       - uses: actions/checkout@v2
 
