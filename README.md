@@ -34,14 +34,13 @@ Please follow Firebolt's [documentation](https://docs.firebolt.io/integrations/b
    git clone https://github.com/firebolt-db/metabase-firebolt-driver
    ```
 
-3. Download Firebolt jdbc driver from the [Firebolt generic jdbc driver](https://docs.firebolt.io/integrations/connecting-via-jdbc) and paste it in metabase-firebolt-driver directory to make a local maven repo.
+3. Prepare metabase dependencies
 
    ```shell
    cp ../../target/uberjar/metabase.jar metabase-firebolt-driver/
    cd metabase-firebolt-driver
    mkdir repo
    mvn deploy:deploy-file -Durl=file:repo -DgroupId=com.firebolt -DartifactId=metabase-core -Dversion=1.40 -Dpackaging=jar -Dfile=metabase.jar
-   mvn deploy:deploy-file -Durl=file:repo -DgroupId=com.firebolt -DartifactId=firebolt-jdbc -Dversion=1.0.0 -Dpackaging=jar -Dfile=firebolt-jdbc-1.18-jar-with-dependencies.jar
    ```
 
 4. Build the jar
