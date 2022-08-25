@@ -49,7 +49,7 @@ Please follow Firebolt's [documentation](https://docs.firebolt.io/integrations/b
    LEIN_SNAPSHOTS_IN_RELEASE=true DEBUG=1 lein uberjar
    ```
 
-5. Let's assume we download `metabase.jar` from the [Metabase jar](https://www.metabase.com/docs/latest/operations-guide/running-the-metabase-jar-file.html) to `~/metabase/` and we built the project above. Copy the built jar and also Firebolt generic jdbc driver jar to the Metabase plugins directly and run Metabase from there!
+5. Let's assume we download `metabase.jar` from the [Metabase jar](https://www.metabase.com/docs/latest/operations-guide/running-the-metabase-jar-file.html) to `~/metabase/` and we built the project above. Copy the built jar to the Metabase plugins directly and run Metabase from there!
 
    ```shell
    cd ~/metabase/
