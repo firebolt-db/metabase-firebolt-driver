@@ -34,14 +34,13 @@ Please follow Firebolt's [documentation](https://docs.firebolt.io/integrations/b
    git clone https://github.com/firebolt-db/metabase-firebolt-driver
    ```
 
-3. Download Firebolt jdbc driver from the [Firebolt generic jdbc driver](https://docs.firebolt.io/integrations/connecting-via-jdbc) and paste it in metabase-firebolt-driver directory to make a local maven repo.
+3. Prepare metabase dependencies
 
    ```shell
    cp ../../target/uberjar/metabase.jar metabase-firebolt-driver/
    cd metabase-firebolt-driver
    mkdir repo
    mvn deploy:deploy-file -Durl=file:repo -DgroupId=com.firebolt -DartifactId=metabase-core -Dversion=1.40 -Dpackaging=jar -Dfile=metabase.jar
-   mvn deploy:deploy-file -Durl=file:repo -DgroupId=com.firebolt -DartifactId=firebolt-jdbc -Dversion=1.0.0 -Dpackaging=jar -Dfile=firebolt-jdbc-1.18-jar-with-dependencies.jar
    ```
 
 4. Build the jar
@@ -50,7 +49,7 @@ Please follow Firebolt's [documentation](https://docs.firebolt.io/integrations/b
    LEIN_SNAPSHOTS_IN_RELEASE=true DEBUG=1 lein uberjar
    ```
 
-5. Let's assume we download `metabase.jar` from the [Metabase jar](https://www.metabase.com/docs/latest/operations-guide/running-the-metabase-jar-file.html) to `~/metabase/` and we built the project above. Copy the built jar and also Firebolt generic jdbc driver jar to the Metabase plugins directly and run Metabase from there!
+5. Let's assume we download `metabase.jar` from the [Metabase jar](https://www.metabase.com/docs/latest/operations-guide/running-the-metabase-jar-file.html) to `~/metabase/` and we built the project above. Copy the built jar to the Metabase plugins directly and run Metabase from there!
 
    ```shell
    cd ~/metabase/
