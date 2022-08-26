@@ -17,9 +17,19 @@ driver:
           placeholder: Database
     - user
     - password
-    - merge:
-        - additional-options
-        - placeholder: "engine=engine_name"
+    - name: account
+      display-name: Account name
+      required: false
+      placeholder: account name
+    - name: engine_name
+      display-name: Engine name
+      required: false
+      placeholder: engine name
+      helper-text: If not specified, the default engine will be picked.
+    - name: additional-options
+      display-name: Additional JDBC options
+      placeholder: param_1=value_1&param_2=value_2...
+      required: false
   connection-properties-include-tunnel-config: false
 init:
   - step: load-namespace
