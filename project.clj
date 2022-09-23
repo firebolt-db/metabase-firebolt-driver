@@ -1,8 +1,8 @@
-(defproject metabase/firebolt-driver "1.0.5"
+(defproject metabase/firebolt-driver "1.0.6"
   :min-lein-version "2.5.0"
 
   :dependencies
-  [[com.firebolt/firebolt-jdbc "2.0.1"]]
+  [[com.firebolt/firebolt-jdbc "2.1.2"]]
 
   :repositories [["snapshots" {:sign-releases false
                                :url "https://repo.repsy.io/mvn/firebolt/maven-snapshots"
