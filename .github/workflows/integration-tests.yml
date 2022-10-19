@@ -64,11 +64,11 @@ jobs:
               sed --in-place '299s#$#\n                                 "modules/drivers/firebolt/src"#' deps.edn
               sed --in-place 's/api.app.firebolt.io/api.${{ github.event.inputs.environment }}.firebolt.io/'  modules/drivers/firebolt/src/metabase/driver/firebolt.clj
               sed --in-place '$ s/.$//' modules/drivers/deps.edn
-              sed --in-place '$ a   :mvn/repos {"repsy" {:url "https://repo.repsy.io/mvn/firebolt/maven"}}}' modules/drivers/deps.edn
-              sed --in-place '2s#$#\n :mvn/repos {"repsy" {:url "https://repo.repsy.io/mvn/firebolt/maven"}}#' bin/build-drivers/deps.edn
-              sed --in-place '2s#$#\n :mvn/repos {"repsy" {:url "https://repo.repsy.io/mvn/firebolt/maven"}}#' bin/build-mb/deps.edn
-              sed --in-place '2s#$#\n :mvn/repos {"repsy" {:url "https://repo.repsy.io/mvn/firebolt/maven"}}#' bin/release/deps.edn
-              sed --in-place '152s#$#\n :mvn/repos {"repsy" {:url "https://repo.repsy.io/mvn/firebolt/maven"}}#' deps.edn
+              sed --in-place '$ a   :mvn/repos {"repsy" {:url "https://repo.repsy.io/mvn/firebolt/maven-snapshots"}}}' modules/drivers/deps.edn
+              sed --in-place '2s#$#\n :mvn/repos {"repsy" {:url "https://repo.repsy.io/mvn/firebolt/maven-snapshots"}}#' bin/build-drivers/deps.edn
+              sed --in-place '2s#$#\n :mvn/repos {"repsy" {:url "https://repo.repsy.io/mvn/firebolt/maven-snapshots"}}#' bin/build-mb/deps.edn
+              sed --in-place '2s#$#\n :mvn/repos {"repsy" {:url "https://repo.repsy.io/mvn/firebolt/maven-snapshots"}}#' bin/release/deps.edn
+              sed --in-place '152s#$#\n :mvn/repos {"repsy" {:url "https://repo.repsy.io/mvn/firebolt/maven-snapshots"}}#' deps.edn
               yarn build-static-viz
 
       - name: Setup database and engine
