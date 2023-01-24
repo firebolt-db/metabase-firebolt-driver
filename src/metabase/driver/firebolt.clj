@@ -219,8 +219,8 @@
      (set/union
       (set (for [{:keys [database table_name]} (jdbc/query {:connection conn} ["SELECT table_name from information_schema.tables WHERE table_schema LIKE 'public' AND table_type NOT LIKE 'EXTERNAL'"])]
              {:name table_name :schema (when (seq database) database)}))
-      (set(for [{:keys [database view_name]} (jdbc/query {:connection conn} ["show views"])]
-            {:name view_name :schema (when (seq database) database)}))))})
+      (set(for [{:keys [database table_name]} (jdbc/query {:connection conn} ["SELECT table_name from information_schema.views WHERE table_schema LIKE 'public'"])]
+            {:name table_name :schema (when (seq database) database)}))))})
 
 (defn- database-type->base-type-or-warn
   "Given a `database-type` (e.g. `VARCHAR`) return the mapped Metabase type (e.g. `:type/Text`)."
