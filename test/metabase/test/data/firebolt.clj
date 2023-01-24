@@ -145,7 +145,7 @@
      (set/union
       (set (for [{:keys [database table_name]} (jdbc/query {:connection conn} ["SELECT table_name from information_schema.tables WHERE table_schema LIKE 'public' AND table_type NOT LIKE 'EXTERNAL'"])]
              {:name table_name :schema (when (seq database) database)}))
-      (set(for [{:keys [database view_name]} (jdbc/query {:connection conn} ["SELECT table_name from information_schema.views WHERE table_schema LIKE 'public'"])]
+      (set(for [{:keys [database view_name]} (jdbc/query {:connection conn} ["show views"])]
             {:name view_name :schema (when (seq database) database)}))))}))
 
 ; Fix NaN issue in the integration test case -- Need to return null where firebolt returns NaN
