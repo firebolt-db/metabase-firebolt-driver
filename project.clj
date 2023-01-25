@@ -2,7 +2,7 @@
   :min-lein-version "2.5.0"
 
   :dependencies
-  [[com.firebolt/firebolt-jdbc "2.3.2"]]
+  [[com.firebolt/firebolt-jdbc "2.3.3-SNAPSHOT"]]
 
   :repositories [["snapshots" {:sign-releases false
                                :url "https://repo.repsy.io/mvn/firebolt/maven-snapshots"
