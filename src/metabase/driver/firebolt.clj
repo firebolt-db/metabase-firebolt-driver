@@ -60,20 +60,18 @@
 ; Define mapping of firebolt data types to base type
 (def ^:private database-type->base-type
   (sql-jdbc.sync/pattern-based-database-type->base-type
-   [[#"ARRAY"              :type/Array]
-    [#"BIGINT"             :type/BigInteger]
-    [#"TUPLE"              :type/Text]
-    [#"INTEGER"            :type/Integer]
-    [#"DOUBLE"             :type/Decimal]
-    [#"FLOAT"              :type/Float]
-    [#"STRING"             :type/Text]
-    [#"TIMESTAMP"          :type/DateTime]
-    [#"TIMESTAMP_EXT"      :type/DateTime]
-    [#"DATE"               :type/Date]
-    [#"DATE_EXT"           :type/Date]
-    [#"DECIMAL"            :type/Decimal]
-    [#"BOOLEAN"            :type/Boolean]
-    ]))
+   [[#"ARRAY"                            :type/Array]
+    [#"BIGINT"                           :type/BigInteger]
+    [#"INTEGER"                          :type/Integer]
+    [#"DOUBLE"                           :type/Decimal]
+    [#"FLOAT"                            :type/Float]
+    [#"STRING"                           :type/Text]
+    [#"TIMESTAMP"                        :type/DateTime]
+    [#"TIMESTAMP_WITH_TIMEZONE"          :type/DateTimeWithLocalTZ]
+    [#"DATE"                             :type/Date]
+    [#"DECIMAL"                          :type/Decimal]
+    [#"BOOLEAN"                          :type/Boolean]
+    [#"BYTEA"                            :type/*]]))
 
 ; Map firebolt data types to base types
 (defmethod sql-jdbc.sync/database-type->base-type :firebolt [_ database-type]
@@ -211,15 +209,16 @@
 ;;; ------- Methods to handle Views, Describe database to not return Agg and Join indexes in Firebolt ----------------
 ;;; All the functions below belong to describe-table.clj which are all private in metabase and cant be called or
 ;;; extended directly. Hence needed to implement the entire function chain
+;;; As we should only return public tables that are not external, SHOW TABLES/SHOW VIEWS cannot be used.
 (defmethod driver/describe-database :firebolt
   [_ {:keys [details] :as database}]
   {:tables
    (with-open [conn (jdbc/get-connection (sql-jdbc.conn/db->pooled-connection-spec database))]
      (set/union
-      (set (for [{:keys [database table_name]} (jdbc/query {:connection conn} ["show tables"])]
+      (set (for [{:keys [database table_name]} (jdbc/query {:connection conn} ["SELECT table_name from information_schema.tables WHERE table_schema LIKE 'public' AND table_type NOT LIKE 'EXTERNAL'"])]
              {:name table_name :schema (when (seq database) database)}))
-      (set(for [{:keys [database view_name]} (jdbc/query {:connection conn} ["show views"])]
-            {:name view_name :schema (when (seq database) database)}))))})
+      (set(for [{:keys [database table_name]} (jdbc/query {:connection conn} ["SELECT table_name from information_schema.views WHERE table_schema LIKE 'public'"])]
+            {:name table_name :schema (when (seq database) database)}))))})
 
 (defn- database-type->base-type-or-warn
   "Given a `database-type` (e.g. `VARCHAR`) return the mapped Metabase type (e.g. `:type/Text`)."
