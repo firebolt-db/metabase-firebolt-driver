@@ -45,7 +45,7 @@ jobs:
         run: |
           clojure -e '(-> "./project.clj" slurp read-string (nth 2))'
           version=$(clojure -e '(-> "./project.clj" slurp read-string (nth 2))' | tr -d '"')
-          mv target/default+uberjar/firebolt.metabase-driver.jar target/default+uberjar/firebolt.metabase-driver-${version}.jar
+          mv target/uberjar/firebolt.metabase-driver.jar target/uberjar/firebolt.metabase-driver-${version}.jar
           echo "::set-output name=version::${version}"
 
       - name: Upload resulting jar file
