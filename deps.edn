@@ -2,7 +2,7 @@
  ["src" "resources"]
 
  :deps
- {com.firebolt/firebolt-jdbc {:mvn/version "2.3.3"}}
+ {com.firebolt/firebolt-jdbc {:mvn/version "2.2.4"}}
  :mvn/repos
  {"releases" {:url "https://repo.repsy.io/mvn/firebolt/maven"}}
 
