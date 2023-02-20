@@ -69,7 +69,6 @@ jobs:
               sed --in-place '2s#$#\n :mvn/repos {"repsy" {:url "https://repo.repsy.io/mvn/firebolt/maven"}}#' bin/build-mb/deps.edn
               sed --in-place '2s#$#\n :mvn/repos {"repsy" {:url "https://repo.repsy.io/mvn/firebolt/maven"}}#' bin/release/deps.edn
               sed --in-place '152s#$#\n :mvn/repos {"repsy" {:url "https://repo.repsy.io/mvn/firebolt/maven"}}#' deps.edn
-              yarn build-static-viz
 
       - name: Setup database and engine
         id: setup
