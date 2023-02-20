@@ -3,6 +3,7 @@
              [string :as str]
              [set :as set]]
             [clojure.java.jdbc :as jdbc]
+            [metabase.driver.sql.util :as sql.u]
             [clojure.tools.logging  :as log]
             [honeysql.core :as hsql]
             [java-time :as t]
@@ -211,7 +212,10 @@
 ; call REGEXP_MATCHES function when regex-match-first is called
 (defmethod sql.qp/->honeysql [:firebolt :regex-match-first]
   [driver [_ arg pattern]]
-  (hsql/call :REGEXP_MATCHES (sql.qp/->honeysql driver arg) (sql.qp/->honeysql driver pattern)))
+  (let [arg-sql (hformat/to-sql (sql.qp/->honeysql driver arg))
+        pattern-sql  (sql.u/escape-sql(sql.qp/->honeysql driver pattern) :ansi)
+        sql-string (str "REGEXP_MATCHES(" arg-sql ", '" pattern-sql "')[1]")]
+    (hsql/raw sql-string)))
 
 ;;; ------- Methods to handle Views, Describe database to not return Agg and Join indexes in Firebolt ----------------
 ;;; All the functions below belong to describe-table.clj which are all private in metabase and cant be called or
