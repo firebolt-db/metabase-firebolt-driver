@@ -11,7 +11,6 @@ on:
         options:
           - dev
           - staging
-          - app
       database:
         description: 'Database - a new one will be created if not provided'
         required: false
@@ -21,9 +20,22 @@ on:
         required: false
         default: ''
 jobs:
-  build:
+  run-integration-tests:
     runs-on: ubuntu-latest
     steps:
+      - name: Determine env variables
+        run: |
+          if [ "${{ github.event.inputs.environment }}" == 'staging' ]; then
+             echo "USERNAME=${{ secrets.FIREBOLT_USERNAME_STAGING }}" >> "$GITHUB_ENV"
+             echo "PASSWORD=${{ secrets.FIREBOLT_PASSWORD_STAGING }}" >> "$GITHUB_ENV"
+             echo "SERVICE_ACCOUNT_ID=${{ secrets.SERVICE_ACCOUNT_ID_STAGING }}" >> "$GITHUB_ENV"
+             echo "SERVICE_ACCOUNT_SECRET=${{ secrets.SERVICE_ACCOUNT_SECRET_STAGING }}" >> "$GITHUB_ENV"
+          else
+             echo "USERNAME=${{ secrets.FIREBOLT_USERNAME_DEV }}" >> "$GITHUB_ENV"
+             echo "PASSWORD=${{ secrets.FIREBOLT_PASSWORD_DEV }}" >> "$GITHUB_ENV"
+             echo "SERVICE_ACCOUNT_ID=${{ secrets.SERVICE_ACCOUNT_ID_DEV }}" >> "$GITHUB_ENV"
+             echo "SERVICE_ACCOUNT_SECRET=${{ secrets.SERVICE_ACCOUNT_SECRET_DEV }}" >> "$GITHUB_ENV"
+          fi
       - name: "Checkout Metabase Code"
         uses: actions/checkout@v2
         with:
@@ -69,6 +81,7 @@ jobs:
               sed --in-place '2s#$#\n :mvn/repos {"repsy" {:url "https://repo.repsy.io/mvn/firebolt/maven"}}#' bin/build-mb/deps.edn
               sed --in-place '2s#$#\n :mvn/repos {"repsy" {:url "https://repo.repsy.io/mvn/firebolt/maven"}}#' bin/release/deps.edn
               sed --in-place '152s#$#\n :mvn/repos {"repsy" {:url "https://repo.repsy.io/mvn/firebolt/maven"}}#' deps.edn
+              export NODE_OPTIONS=--openssl-legacy-provider
               yarn build-static-viz
 
       - name: Setup database and engine
@@ -76,8 +89,8 @@ jobs:
         if: ${{ github.event.inputs.database == '' }}
         uses: firebolt-db/integration-testing-setup@master
         with:
-          firebolt-username: ${{ secrets.FIREBOLT_USERNAME }}
-          firebolt-password: ${{ secrets.FIREBOLT_PASSWORD }}
+          firebolt-username: ${{ env.USERNAME }}
+          firebolt-password: ${{ env.PASSWORD }}
           api-endpoint: "api.${{ github.event.inputs.environment }}.firebolt.io"
           region: "us-east-1"
 
@@ -101,4 +114,4 @@ jobs:
       - name: Run metabase integration tests
         shell: bash
         run: |
-          DRIVERS=firebolt MB_FIREBOLT_TEST_HOST=api.${{ github.event.inputs.environment }}.firebolt.io MB_FIREBOLT_TEST_PORT=8123 MB_FIREBOLT_TEST_USER=${{ secrets.FIREBOLT_USERNAME }} MB_FIREBOLT_TEST_PASSWORD="${{ secrets.FIREBOLT_PASSWORD }}" MB_FIREBOLT_TEST_DB=${{ steps.find-database-name.outputs.database_name }} MB_FIREBOLT_TEST_ADDITIONAL_OPTIONS=engine=${{ steps.find-engine-name.outputs.engine_name }} clojure -X:dev:drivers:drivers-dev:test
+          DRIVERS=firebolt MB_FIREBOLT_TEST_HOST=api.${{ github.event.inputs.environment }}.firebolt.io MB_FIREBOLT_TEST_PORT=8123 MB_FIREBOLT_TEST_USER=${{ env.SERVICE_ACCOUNT_ID }} MB_FIREBOLT_TEST_PASSWORD="${{ env.SERVICE_ACCOUNT_SECRET }}" MB_FIREBOLT_TEST_DB=${{ steps.find-database-name.outputs.database_name }} MB_FIREBOLT_TEST_ADDITIONAL_OPTIONS=engine=${{ steps.find-engine-name.outputs.engine_name }} clojure -X:dev:drivers:drivers-dev:test

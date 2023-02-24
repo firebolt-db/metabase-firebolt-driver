@@ -1,4 +1,4 @@
-(defproject metabase/firebolt-driver "1.0.11"
+(defproject metabase/firebolt-driver "1.0.12"
   :min-lein-version "2.5.0"
 
   :dependencies
