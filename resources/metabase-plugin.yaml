@@ -11,15 +11,15 @@ driver:
   lazy-load: true
   parent: sql-jdbc
   connection-properties:
-    - merge:
-        - dbname
-        - name: db
-          placeholder: Database
     - user
     - password
+    - name: db
+      display-name: Database name
+      required: false
+      placeholder: database name
     - name: account
       display-name: Account name
-      required: false
+      required: true
       placeholder: account name
       helper-text: If not specified, the default account will be picked.
     - name: engine_name
