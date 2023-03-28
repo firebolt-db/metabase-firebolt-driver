@@ -74,8 +74,6 @@ jobs:
               sed --in-place '2s#$#\n  metabase/firebolt           {:local/root "firebolt"}#' modules/drivers/deps.edn
               sed --in-place '264s#$#\n    "modules/drivers/firebolt/test"#' deps.edn
               sed --in-place '299s#$#\n                                 "modules/drivers/firebolt/src"#' deps.edn
-              sed --in-place 's/api.app.firebolt.io/api.${{ github.event.inputs.environment }}.firebolt.io/'  modules/drivers/firebolt/src/metabase/driver/firebolt.clj
-              sed --in-place 's/api.app.firebolt.io/api.${{ github.event.inputs.environment }}.firebolt.io/'  modules/drivers/firebolt/test/metabase/driver/firebolt_test.clj
               sed --in-place '$ s/.$//' modules/drivers/deps.edn
               sed --in-place '$ a   :mvn/repos {"repsy" {:url "https://repo.repsy.io/mvn/firebolt/maven"}}}' modules/drivers/deps.edn
               sed --in-place '2s#$#\n :mvn/repos {"repsy" {:url "https://repo.repsy.io/mvn/firebolt/maven"}}#' bin/build-drivers/deps.edn
@@ -115,4 +113,4 @@ jobs:
       - name: Run metabase integration tests
         shell: bash
         run: |
-          DRIVERS=firebolt MB_FIREBOLT_TEST_USER=${{ env.SERVICE_ACCOUNT_ID }} MB_FIREBOLT_TEST_PASSWORD="${{ env.SERVICE_ACCOUNT_SECRET }}" MB_FIREBOLT_TEST_DB=${{ steps.find-database-name.outputs.database_name }} MB_FIREBOLT_TEST_ADDITIONAL_OPTIONS=engine=${{ steps.find-engine-name.outputs.engine_name }} clojure -X:dev:drivers:drivers-dev:test
+          DRIVERS=firebolt MB_FIREBOLT_TEST_USER=${{ env.SERVICE_ACCOUNT_ID }} MB_FIREBOLT_TEST_PASSWORD="${{ env.SERVICE_ACCOUNT_SECRET }}" MB_FIREBOLT_TEST_DB=${{ steps.find-database-name.outputs.database_name }} MB_FIREBOLT_TEST_ADDITIONAL_OPTIONS='engine=${{ steps.find-engine-name.outputs.engine_name }}&environment=${{ github.event.inputs.environment }}' clojure -X:dev:drivers:drivers-dev:test
