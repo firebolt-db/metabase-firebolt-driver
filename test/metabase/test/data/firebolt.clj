@@ -34,8 +34,6 @@
 (defmethod tx/dbdef->connection-details :firebolt
   [_ context {:keys [database-name]}]
   (merge {:user               (tx/db-test-env-var-or-throw :firebolt :user)
-          :host               (tx/db-test-env-var-or-throw :firebolt :host)
-          :port               (tx/db-test-env-var-or-throw :firebolt :port)
           :password           (tx/db-test-env-var-or-throw :firebolt :password)
           :db                 (tx/db-test-env-var-or-throw :firebolt :db)
           :additional-options (tx/db-test-env-var-or-throw :firebolt :additional-options)}))
@@ -116,7 +114,7 @@
 (defn- jdbc-spec->connection
   ^Connection [jdbc-spec]
   (DriverManager/getConnection (format "jdbc:%s:%s" (:subprotocol jdbc-spec) (:subname jdbc-spec))
-                               (connection-pool/map->properties (select-keys jdbc-spec [:host :user :password]))))
+                               (connection-pool/map->properties (select-keys jdbc-spec [:user :password]))))
 
 ; by default, firebolt allows to run a query of 50000 characters.
 ; So setting the max_ast_elements flag to huge number to make the bulk insert queries work
