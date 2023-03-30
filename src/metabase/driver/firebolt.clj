@@ -61,26 +61,26 @@
 ; Define mapping of firebolt data types to base type
 (def ^:private database-type->base-type
   "Map of Firebolt column types -> Field base types."
-  { :array        :type/Array
+  { :array         :type/Array
     :bigint        :type/BigInteger
-    :integer        :type/Integer
-    :string       :type/Text
-   :bit           :type/*
-   :bool          :type/Boolean
-   :boolean       :type/Boolean
-   :bytea         :type/*    ; byte array
-   :date          :type/Date
-   :decimal       :type/Decimal
-   :int           :type/Integer
-   :numeric       :type/Decimal
-   :real          :type/Float
-   :text          :type/Text
-   :time          :type/Time
-   :timestamp     :type/DateTime
-   :timestamptz   :type/DateTimeWithLocalTZ
-   :varchar       :type/Text
-   (keyword "timestamp with timezone")    :type/DateTime
-   (keyword "timestamp without timezone") :type/DateTime})
+    :integer       :type/Integer
+    :string        :type/Text
+    :bit           :type/*
+    :bool          :type/Boolean
+    :boolean       :type/Boolean
+    :bytea         :type/*    ; byte array
+    :date          :type/Date
+    :decimal       :type/Decimal
+    :int           :type/Integer
+    :numeric       :type/Decimal
+    :real          :type/Float
+    :text          :type/Text
+    :time          :type/Time
+    :timestamp     :type/DateTime
+    :timestamptz   :type/DateTimeWithLocalTZ
+    :varchar       :type/Text
+    (keyword "timestamp with timezone")    :type/DateTime
+    (keyword "timestamp without timezone") :type/DateTime})
 
 ; Map firebolt data types to base types
 (defmethod sql-jdbc.sync/database-type->base-type :firebolt [_ database-type]
