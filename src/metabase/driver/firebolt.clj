@@ -188,9 +188,6 @@
   [{field-name :name, table-id :table_id}]
   [(db/select-one-field :name Table, :id table-id) field-name])
 
-(defmethod sql.qp/field->identifier :firebolt
-  [_ field]
-  (apply hsql/qualify (qualified-name-components field)))
 
 ; Get the active tables of configured database
 (defmethod sql-jdbc.sync/active-tables :firebolt [& args]
