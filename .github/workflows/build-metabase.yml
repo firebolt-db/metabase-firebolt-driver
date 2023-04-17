@@ -1,11 +1,7 @@
 name: Build Metabase jar
 
 on:
-  workflow_call:
-    inputs:
-      version:
-        required: true
-        type: string
+  push:
 
 jobs:
   build:
@@ -16,14 +12,14 @@ jobs:
         uses: actions/cache@v2
         with:
           path: target/uberjar/metabase.jar
-          key: ${{ inputs.version }}-metabase-jar
+          key: v0.46.1-metabase-jar
 
       - name: "Checkout Metabase Code"
         uses: actions/checkout@v2
         if: steps.cache-metabase-jar.outputs.cache-hit != 'true'
         with:
           repository: metabase/metabase
-          ref: ${{ inputs.version }}
+          ref: v0.46.1
 
       - name: Prepare java
         uses: actions/setup-java@v2
