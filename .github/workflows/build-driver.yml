@@ -1,6 +1,7 @@
 name: Build Metabase Firebolt Driver
 
 on:
+  push:
   workflow_dispatch:
     inputs:
       metabase-version:
@@ -31,7 +32,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: "Download metabase"
-        run: wget https://downloads.metabase.com/${{ github.event.inputs.metabase-version }}/metabase.jar
+        run: wget https://downloads.metabase.com/v0.46.1/metabase.jar
       - name: "Maven install"
         run: |
           mkdir repo
