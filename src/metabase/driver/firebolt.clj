@@ -182,8 +182,6 @@
 
 (models/defmodel Table :metabase_table)
 
-; ignore the schema when producing the identifier
-
 
 ; Get the active tables of configured database
 (defmethod sql-jdbc.sync/active-tables :firebolt [& args]
