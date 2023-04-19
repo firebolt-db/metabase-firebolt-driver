@@ -182,15 +182,6 @@
 
 (models/defmodel Table :metabase_table)
 
-; ignore the schema when producing the identifier
-(defn qualified-name-components
-  "Return the pieces that represent a path to `field`, of the form `[table-name parent-fields-name* field-name]`."
-  [{field-name :name, table-id :table_id}]
-  [(db/select-one-field :name Table, :id table-id) field-name])
-
-(defmethod sql.qp/field->identifier :firebolt
-  [_ field]
-  (apply hsql/qualify (qualified-name-components field)))
 
 ; Get the active tables of configured database
 (defmethod sql-jdbc.sync/active-tables :firebolt [& args]

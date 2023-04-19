@@ -1,7 +1,19 @@
 name: Build Metabase Firebolt Driver
 
 on:
+  workflow_dispatch:
+    inputs:
+      metabase-version:
+        description: 'Metabase version'
+        required: false
+        type: string
+        default: 'v0.46.1'
   workflow_call:
+    inputs:
+      metabase-version:
+        description: 'Metabase version'
+        required: true
+        type: string
     outputs:
       jar-name:
         description: Firebolt Driver jar
@@ -18,17 +30,12 @@ jobs:
       version: ${{steps.get-version.outputs.version}}
     steps:
       - uses: actions/checkout@v2
-
-      - name: "Download metabase jar"
-        uses: actions/download-artifact@v2
-        with:
-          name: metabase.jar
-
+      - name: "Download metabase"
+        run: wget https://downloads.metabase.com/${{ github.event.inputs.metabase-version }}/metabase.jar
       - name: "Maven install"
         run: |
           mkdir repo
           mvn deploy:deploy-file -Durl=file:repo -DgroupId=com.firebolt -DartifactId=metabase-core -Dversion=1.40 -Dpackaging=jar -Dfile=metabase.jar
-
       - name: "Install dependencies"
         run: lein deps
 
@@ -39,6 +46,7 @@ jobs:
         uses: DeLaGuardo/setup-clojure@3.7
         with:
           cli: '1.11.1.1155'
+          lein: '2.9.10'
 
       - name: Get version
         id: get-version
