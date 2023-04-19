@@ -31,7 +31,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: "Download metabase"
-        run: wget https://downloads.metabase.com/${{ github.event.inputs.metabase-version }}/metabase.jar
+        run: wget https://downloads.metabase.com/${{ inputs.metabase-version }}/metabase.jar
       - name: "Maven install"
         run: |
           mkdir repo
