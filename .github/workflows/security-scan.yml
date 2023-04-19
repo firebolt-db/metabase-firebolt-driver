@@ -7,16 +7,25 @@ on:
     branches: [ develop ]
 
 jobs:
-  build-driver:
-    uses: ./.github/workflows/build-driver.yml
-    with:
-      metabase-version: v0.46.1
-
   security-scan:
-    needs: build-driver
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+
+    - name: "Download metabase jar"
+      run: wget https://downloads.metabase.com/v0.46.1/metabase.jar
+
+    - name: "Maven install"
+      run: |
+           mkdir repo
+           mvn deploy:deploy-file -Durl=file:repo -DgroupId=com.firebolt -DartifactId=metabase-core -Dversion=1.40 -Dpackaging=jar -Dfile=metabase.jar
+
+    - name: "Install dependencies"
+      run: lein deps
+
+    - name: "Package into a jar"
+      run: LEIN_SNAPSHOTS_IN_RELEASE=true DEBUG=1 lein uberjar
+
     - name: "Fossa branch fix"
       if: ${{ github.event_name == 'pull_request' }}
       run: |
