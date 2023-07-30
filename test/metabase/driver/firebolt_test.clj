@@ -36,7 +36,7 @@
           [[
              {:classname "com.firebolt.FireboltDriver",
               :ssl true,
-              :subname "//api.app.firebolt.io/",
+              :subname "//api.dev.firebolt.io/",
               :subprotocol "firebolt"}
             ]]]
   (let [actual-spec (sql-jdbc.conn/connection-details->spec :firebolt details)]

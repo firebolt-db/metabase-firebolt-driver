@@ -43,10 +43,10 @@
 
 ; Create database specification and obtain connection properties for connecting to a Firebolt database.
 (defmethod sql-jdbc.conn/connection-details->spec :firebolt
-  [_ {:keys [db]
-      :or    {db ""}
+  [_ {:keys [db, environment_name]
+      :or    {db "", environment_name "dev"}
       :as   details}]
-  (let [spec {:classname "com.firebolt.FireboltDriver", :subprotocol "firebolt", :subname (str "//api.app.firebolt.io/" db), :ssl true}]
+  (let [spec {:classname "com.firebolt.FireboltDriver", :subprotocol "firebolt", :subname (str "//api." environment_name ".firebolt.io/" db), :ssl true}]
     (-> (merge spec (select-keys details [:password :classname :subprotocol :user :subname:additional-options :account :engine_name]))
         (sql-jdbc.common/handle-additional-options  (select-keys details [:password :classname :subprotocol :user :subname :additional-options :account :engine_name]))
         )))

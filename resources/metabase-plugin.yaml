@@ -21,6 +21,11 @@ driver:
       display-name: Account name
       required: false
       placeholder: account name
+      helper-text: If not specified, the default account will be picked.
+    - name: environment_name
+      display-name: Environment name
+      required: true
+      placeholder: If not specified, the dev will be used.
     - name: engine_name
       display-name: Engine name
       required: false
