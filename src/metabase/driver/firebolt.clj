@@ -46,9 +46,9 @@
   [_ {:keys [db]
       :or    {db ""}
       :as   details}]
-  (let [spec {:classname "com.firebolt.FireboltDriver", :subprotocol "firebolt", :subname (str "//api." (System/getProperty "env" "app") ".firebolt.io/" db), :ssl true}]
-    (-> (merge spec (select-keys details [:password :classname :subprotocol :user :subname:additional-options :account :engine_name]))
-        (sql-jdbc.common/handle-additional-options  (select-keys details [:password :classname :subprotocol :user :subname :additional-options :account :engine_name]))
+  (let [spec {:classname "com.firebolt.FireboltDriver", :subprotocol "firebolt", :subname (str db), :ssl true, :env (System/getProperty "env" "app")}]
+    (-> (merge spec (select-keys details [:client_secret :classname :subprotocol :client_id :subname :additional-options :account :engine_name :env]))
+        (sql-jdbc.common/handle-additional-options  (select-keys details [:client_secret :classname :subprotocol :client_id :subname :additional-options :account :engine_name :env]))
         )))
 
 ; Testing the firebolt database connection
@@ -65,7 +65,6 @@
     :bigint        :type/BigInteger
     :integer       :type/Integer
     :string        :type/Text
-    :bit           :type/*
     :bool          :type/Boolean
     :boolean       :type/Boolean
     :bytea         :type/*    ; byte array
@@ -75,7 +74,6 @@
     :numeric       :type/Decimal
     :real          :type/Float
     :text          :type/Text
-    :time          :type/Time
     :timestamp     :type/DateTime
     :timestamptz   :type/DateTimeWithLocalTZ
     :varchar       :type/Text

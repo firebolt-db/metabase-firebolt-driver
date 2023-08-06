@@ -11,8 +11,12 @@ driver:
   lazy-load: true
   parent: sql-jdbc
   connection-properties:
-    - user
-    - password
+    - name: client_id
+      display-name: Client ID
+      required: true
+    - name: client_secret
+      display-name: Client Secret
+      required: true
     - name: db
       display-name: Database name
       required: false
