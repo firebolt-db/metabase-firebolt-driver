@@ -21,6 +21,7 @@ driver:
       display-name: Account name
       required: false
       placeholder: account name
+      helper-text: If not specified, the default account will be picked.
     - name: engine_name
       display-name: Engine name
       required: false
