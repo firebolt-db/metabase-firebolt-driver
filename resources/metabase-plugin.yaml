@@ -11,11 +11,11 @@ driver:
   lazy-load: true
   parent: sql-jdbc
   connection-properties:
-    - name: client_id
-      display-name: Client ID
+    - name: user
+      display-name: User/Client ID
       required: true
-    - name: client_secret
-      display-name: Client Secret
+    - name: password
+      display-name: Password/Client Secret
       required: true
     - name: db
       display-name: Database name
@@ -23,7 +23,7 @@ driver:
       placeholder: database name
     - name: account
       display-name: Account name
-      required: true
+      required: false
       placeholder: account name
       helper-text: If not specified, the default account will be picked.
     - name: engine_name
