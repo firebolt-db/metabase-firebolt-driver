@@ -3,14 +3,6 @@ name: Run integration tests
 on:
   workflow_dispatch:
     inputs:
-      environment:
-        description: 'Environment to run tests against'
-        type: choice
-        required: true
-        default: 'dev'
-        options:
-          - dev
-          - staging
       database:
         description: 'Database - a new one will be created if not provided'
         required: false
@@ -23,19 +15,6 @@ jobs:
   run-integration-tests:
     runs-on: ubuntu-latest
     steps:
-      - name: Determine env variables
-        run: |
-          if [ "${{ github.event.inputs.environment }}" == 'staging' ]; then
-             echo "USERNAME=${{ secrets.FIREBOLT_USERNAME_STAGING }}" >> "$GITHUB_ENV"
-             echo "PASSWORD=${{ secrets.FIREBOLT_PASSWORD_STAGING }}" >> "$GITHUB_ENV"
-             echo "SERVICE_ACCOUNT_ID=${{ secrets.SERVICE_ACCOUNT_ID_STAGING }}" >> "$GITHUB_ENV"
-             echo "SERVICE_ACCOUNT_SECRET=${{ secrets.SERVICE_ACCOUNT_SECRET_STAGING }}" >> "$GITHUB_ENV"
-          else
-             echo "USERNAME=${{ secrets.FIREBOLT_USERNAME_DEV }}" >> "$GITHUB_ENV"
-             echo "PASSWORD=${{ secrets.FIREBOLT_PASSWORD_DEV }}" >> "$GITHUB_ENV"
-             echo "SERVICE_ACCOUNT_ID=${{ secrets.SERVICE_ACCOUNT_ID_DEV }}" >> "$GITHUB_ENV"
-             echo "SERVICE_ACCOUNT_SECRET=${{ secrets.SERVICE_ACCOUNT_SECRET_DEV }}" >> "$GITHUB_ENV"
-          fi
       - name: "Checkout Metabase Code"
         uses: actions/checkout@v2
         with:
@@ -88,9 +67,9 @@ jobs:
         if: ${{ github.event.inputs.database == '' }}
         uses: firebolt-db/integration-testing-setup@v1
         with:
-          firebolt-username: ${{ env.USERNAME }}
-          firebolt-password: ${{ env.PASSWORD }}
-          api-endpoint: "api.${{ github.event.inputs.environment }}.firebolt.io"
+          firebolt-username: ${{ secrets.FIREBOLT_STG_USERNAME }}
+          firebolt-password: ${{ secrets.FIREBOLT_STG_PASSWORD }}
+          api-endpoint: "api.staging.firebolt.io"
           region: "us-east-1"
 
       - name: Determine database name
@@ -113,4 +92,4 @@ jobs:
       - name: Run metabase integration tests
         shell: bash
         run: |
-          DRIVERS=firebolt MB_FIREBOLT_TEST_USER=${{ env.SERVICE_ACCOUNT_ID }} MB_FIREBOLT_TEST_PASSWORD="${{ env.SERVICE_ACCOUNT_SECRET }}" MB_FIREBOLT_TEST_DB=${{ steps.find-database-name.outputs.database_name }} MB_FIREBOLT_TEST_ADDITIONAL_OPTIONS='engine=${{ steps.find-engine-name.outputs.engine_name }}&environment=${{ github.event.inputs.environment }}' clojure -X:dev:drivers:drivers-dev:test
+          DRIVERS=firebolt MB_FIREBOLT_TEST_USER=${{ env.SERVICE_ID_STG }} MB_FIREBOLT_TEST_PASSWORD="${{ env.SERVICE_SECRET_STG }}" MB_FIREBOLT_TEST_DB=${{ steps.find-database-name.outputs.database_name }} MB_FIREBOLT_TEST_ADDITIONAL_OPTIONS='engine=${{ steps.find-engine-name.outputs.engine_name }}&environment=staging' clojure -X:dev:drivers:drivers-dev:test
