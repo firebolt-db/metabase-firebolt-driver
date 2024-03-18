@@ -1,8 +1,8 @@
-(defproject metabase/firebolt-driver "3.0.1"
+(defproject metabase/firebolt-driver "3.0.3"
   :min-lein-version "3.0.0"
 
   :dependencies
-  [[io.firebolt/firebolt-jdbc "3.0.1"]]
+  [[io.firebolt/firebolt-jdbc "3.0.3"]]
 
   :repositories [["snapshots" {:sign-releases false
                                :url "https://repo.repsy.io/mvn/firebolt/maven-snapshots"
@@ -28,7 +28,7 @@
     :target-path    "target/%s"
     :manifest {
                 "Implementation-Title" "Firebolt JDBC driver"
-                "Implementation-Version" "3.0.0-SNAPSHOT"
+                "Implementation-Version" "3.0.3"
                 }
     :uberjar-name   "firebolt.metabase-driver.jar"}})
 

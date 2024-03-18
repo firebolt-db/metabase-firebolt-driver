@@ -62,3 +62,14 @@ You should see a message on startup similar to:
 2019-05-07 23:27:32 INFO plugins.lazy-loaded-driver :: Registering lazy loading driver :firebolt...
 2019-05-07 23:27:32 INFO metabase.driver :: Registered driver :firebolt (parents: #{:sql-jdbc}) 🚚
 ```
+
+## Compatibility matrix
+
+| Firebolt Version | Metabase Release | Driver Version |
+|------------------|------------------|----------------|
+| 1                | <=0.47.x         | <=1.0.13       |
+| 1                | <=0.47.x         | <=1.0.13       |
+| 2                | <=0.47.x         | 3.0.0          |
+| 1&2              | <=0.47.x         | 3.0.1          |
+| 1&2              | 0.48.x           | 3.0.3          |
+| 1&2              | 0.49.x           | 3.0.3          |

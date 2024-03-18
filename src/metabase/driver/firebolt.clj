@@ -1,21 +1,15 @@
-(ns metabase.driver.firebolt
+/(ns metabase.driver.firebolt
   (:require [clojure
              [string :as str]
              [set :as set]]
             [clojure.java.jdbc :as jdbc]
-            [metabase.driver.sql.util :as sql.u]
             [clojure.tools.logging  :as log]
-            [honeysql.core :as hsql]
             [java-time :as t]
-            [honeysql.format :as hformat]
             [medley.core :as m]
             [metabase.driver :as driver]
-            [metabase.driver
-             [common :as driver.common]]
             [metabase.driver.sql-jdbc
              [common :as sql-jdbc.common]
              [connection :as sql-jdbc.conn]
-             [execute :as sql-jdbc.execute]
              [sync :as sql-jdbc.sync]]
             [metabase.driver.sql-jdbc.sync.interface :as i]
             [metabase.driver.sql-jdbc.sync.common :as common]
@@ -25,14 +19,13 @@
             [metabase.util :as u]
             [metabase.util
              [date-2 :as u.date]
-             [honeysql-extensions :as hx]
              [ssh :as ssh]]
-            [metabase.models
+             [metabase.util.honey-sql-2 :as h2x]
+
+    [metabase.models
              [field :as field :refer [Field]]]
             [metabase.mbql.util :as mbql.u]
-            [metabase.query-processor.util :as qputil]
-            [toucan.db :as db]
-            [toucan.models :as models])
+            [metabase.query-processor.util :as qputil])
   (:import [java.sql DatabaseMetaData Types Connection ResultSet]
            [java.time LocalTime OffsetDateTime OffsetTime ZonedDateTime]))
 
@@ -47,14 +40,16 @@
       :or    {db ""}
       :as   details}]
   (let [spec {:classname "com.firebolt.FireboltDriver", :subprotocol "firebolt", :subname (str "//api." (System/getProperty "env" "app") ".firebolt.io/" db), :ssl true}]
-    (-> (merge spec (select-keys details [:client_secret :classname :subprotocol :client_id :subname :additional-options :account :engine_name :env]))
-        (sql-jdbc.common/handle-additional-options  (select-keys details [:client_secret :classname :subprotocol :client_id :subname :additional-options :account :engine_name :env]))
+    (-> (merge spec (select-keys details [:password :classname :subprotocol :user :subname :additional-options :account :engine_name :env]))
+        (sql-jdbc.common/handle-additional-options  (select-keys details [:password :classname :subprotocol :user :subname :additional-options :account :engine_name :env]))
         )))
 
 ; Testing the firebolt database connection
 (defmethod driver/can-connect? :firebolt [driver details]
    (let [connection (sql-jdbc.conn/connection-details->spec driver (ssh/include-ssh-tunnel! details))]
      (= 1 (first (vals (first (jdbc/query connection ["SELECT 1"])))))))
+
+(defmethod driver/db-default-timezone :firebolt []  "UTC" ) ; possible parameters db-default-timezone
 
 ;;; ------------------------------------------------- sql-jdbc.sync --------------------------------------------------
 
@@ -100,63 +95,43 @@
 ;;; ------------------------------------------------- date functions -------------------------------------------------
 
 ; If `expr` is a date, we need to cast it to a timestamp before we can truncate to a finer granularity
-(defmethod sql.qp/date [:firebolt :minute]          [_ _ expr] (hsql/call :date_trunc (hx/literal :minute) (hx/cast :timestamp expr)))
-(defmethod sql.qp/date [:firebolt :hour]            [_ _ expr] (hsql/call :date_trunc (hx/literal :hour) (hx/cast :timestamp expr)))
-(defmethod sql.qp/date [:firebolt :day]             [_ _ expr] (hsql/call :date_trunc (hx/literal :day) expr))
-(defmethod sql.qp/date [:firebolt :month]           [_ _ expr] (hsql/call :date_trunc (hx/literal :month) expr))
-(defmethod sql.qp/date [:firebolt :quarter]         [_ _ expr] (hsql/call :date_trunc (hx/literal :quarter) expr))
-(defmethod sql.qp/date [:firebolt :year]            [_ _ expr] (hsql/call :date_trunc (hx/literal :year) expr))
+(defmethod sql.qp/date [:firebolt :minute] [_ _ expr] [:'toStartOfMinute expr])
+(defmethod sql.qp/date [:firebolt :hour] [_ _ expr] [:'toStartOfHour expr])
+(defmethod sql.qp/date [:firebolt :day] [_ _ expr] (h2x/->date expr))
+(defmethod sql.qp/date [:firebolt :month] [_ _ expr] [:'toStartOfMonth expr])
+(defmethod sql.qp/date [:firebolt :quarter] [_ _ expr] [:'toStartOfQuarter expr])
+(defmethod sql.qp/date [:firebolt :year] [_ _ expr] [:'toStartOfYear expr])
 
 ; Extraction functions
-(defmethod sql.qp/date [:firebolt :minute-of-hour]  [_ _ expr] (hsql/call :to_minute (hx/cast :timestamp expr)))
-(defmethod sql.qp/date [:firebolt :hour-of-day]     [_ _ expr] (hsql/call :to_hour (hx/cast :timestamp expr)))
-(defmethod sql.qp/date [:firebolt :day-of-week]     [_ _ expr] (sql.qp/adjust-day-of-week :firebolt (hsql/call :to_day_of_week expr)))
-(defmethod sql.qp/date [:firebolt :day-of-month]    [_ _ expr] (hsql/call :to_day_of_month expr))
-(defmethod sql.qp/date [:firebolt :day-of-year]     [_ _ expr] (hsql/call :to_day_of_year expr))
-(defmethod sql.qp/date [:firebolt :week-of-year]    [_ _ expr] (hsql/call :to_week expr))
-(defmethod sql.qp/date [:firebolt :month-of-year]   [_ _ expr] (hsql/call :to_month expr))
-(defmethod sql.qp/date [:firebolt :quarter-of-year] [_ _ expr] (hsql/call :to_quarter expr))
+(defmethod sql.qp/date [:firebolt :minute-of-hour] [_ _ expr] [:'toMinute expr])
+(defmethod sql.qp/date [:firebolt :hour-of-day] [_ _ expr] [:'toHour expr])
+(defmethod sql.qp/date [:firebolt :day-of-week]     [_ _ expr] [:'toDayOfWeek expr])
+(defmethod sql.qp/date [:firebolt :day-of-month] [_ _ expr] [:'toDayOfMonth expr])
+(defn- to-start-of-year [expr] [:'toStartOfYear expr])
+(defn- to-relative-day-num [expr] [:'toRelativeDayNum expr])
+(defmethod sql.qp/date [:firebolt :day-of-year] [_ _ expr]
+           (h2x/+
+             (h2x/- (to-relative-day-num expr)
+                    (to-relative-day-num (to-start-of-year expr)))
+             1))
+(defmethod sql.qp/date [:firebolt :week-of-year]    [_ _ expr] [:'toWeekOfYear expr])
+(defmethod sql.qp/date [:firebolt :month-of-year] [_ _ expr] [:'toMonth expr])
+(defmethod sql.qp/date [:firebolt :quarter-of-year] [_ _ expr] [:'toQuaterOfYear expr])
 
 ; Set start of week to be monday
 (defmethod driver/db-start-of-week :firebolt
   [_]
   :monday)
 
-; Generic date-trunc function to cast date expr to timstamp
-(defn- date-trunc [unit expr]
-  (hsql/call :date_trunc (hx/literal unit) (hx/->timestamp expr)))
-
 ; Modify start of week to monday
-(defmethod sql.qp/date [:firebolt :week]
-  [_ _ expr] (sql.qp/adjust-start-of-week :firebolt (partial date-trunc :week) expr))
+(defn- to-start-of-week [expr] [:'toMonday expr])
+(defmethod sql.qp/date [:firebolt :week] [driver _ expr] (sql.qp/adjust-start-of-week driver to-start-of-week expr))
 
 ; Return a appropriate HoneySQL form for converting a Unix timestamp integer field or value to an proper SQL Timestamp.
-(defmethod sql.qp/unix-timestamp->honeysql [:firebolt :seconds] [_ _ expr] (hsql/call :to_timestamp expr))
+(defmethod sql.qp/unix-timestamp->honeysql [:firebolt :seconds] [_ _ expr] (h2x/->datetime expr))
 
 ; Return a HoneySQL form that performs represents addition of some temporal interval to the original `hsql-form'.
-(defmethod sql.qp/add-interval-honeysql-form :firebolt [driver hsql-form amount unit]
-   (if (= unit :quarter)
-     (recur driver hsql-form (hx/* amount 3) :month)
-     (hsql/call :date_add
-                (hx/literal (name unit))
-                (hsql/raw (int amount))
-                (hx/->timestamp hsql-form))))
-
-; Helper function to get the current datetime in honeysql form
-(defmethod sql.qp/current-datetime-honeysql-form :firebolt [_]
-   (hx/cast :timestamp (hsql/raw "NOW()")))
-
-; Return a native query that will fetch the current time
-(defmethod driver.common/current-db-time-native-query :firebolt [_]
-  "SELECT CAST(CAST(NOW() AS TIMESTAMP) AS VARCHAR(24))")
-
-; Time date formatters to parse the current time returned by `current-db-time-native-query`
-(defmethod driver.common/current-db-time-date-formatters :firebolt [_]
-   (driver.common/create-db-time-formatters "yyyy-MM-dd HH:mm:ss"))
-
-; Return the current time and timezone from the perspective of `database`
-(defmethod driver/current-db-time :firebolt [& args]
-  (apply driver.common/current-db-time args))
+(defmethod sql.qp/add-interval-honeysql-form :firebolt [_ dt amount unit] (h2x/+ dt [:raw (format "INTERVAL %d %s" (int amount) (name unit))]))
 
 ; Format a temporal value `t` as a SQL-style literal string, converting time datatype to SQL-style literal string
 (defmethod unprepare/unprepare-value [:firebolt LocalTime]
@@ -179,12 +154,11 @@
   (format "timestamp '%s'" (u.date/format-sql (t/local-date-time t))))
 
 (defmethod sql.qp/cast-temporal-string [:firebolt :Coercion/ISO8601->Time]
-  [_driver _semantic_type expr]
-  (hx/maybe-cast :string expr))
-
+ [_driver _semantic_type expr]
+  (h2x/maybe-cast :string expr))
 ;;; ------------------------------------------------- query handling -------------------------------------------------
 
-(models/defmodel Table :metabase_table)
+;(models/defmodel Table :metabase_table)
 
 
 ; Get the active tables of configured database
@@ -206,16 +180,21 @@
 
 ; call REGEXP_MATCHES function when regex-match-first is called
 (defmethod sql.qp/->honeysql [:firebolt :regex-match-first]
-  [driver [_ arg pattern]]
-  (let [arg-sql (hformat/to-sql (sql.qp/->honeysql driver arg))
-        pattern-sql  (sql.u/escape-sql(sql.qp/->honeysql driver pattern) :ansi)
-        sql-string (str "REGEXP_MATCHES(" arg-sql ", '" pattern-sql "')[1]")]
-    (hsql/raw sql-string)))
+           [driver [_ arg pattern]]
+           [:'extract (sql.qp/->honeysql driver arg) pattern])
 
-;;; ------- Methods to handle Views, Describe database to not return Agg and Join indexes in Firebolt ----------------
-;;; All the functions below belong to describe-table.clj which are all private in metabase and cant be called or
-;;; extended directly. Hence needed to implement the entire function chain
-;;; As we should only return public tables that are not external, SHOW TABLES/SHOW VIEWS cannot be used.
+(defmethod sql.qp/->honeysql [:firebolt :contains]
+            [_ [_ field value options]]
+            (let [hsql-field (sql.qp/->honeysql :firebolt field)
+                  hsql-value (sql.qp/->honeysql :firebolt value)]
+                    (if (get options :case-sensitive true)
+                           [:> [:'positionUTF8                hsql-field hsql-value] 0]
+                           [:> [:'positionCaseInsensitiveUTF8 hsql-field hsql-value] 0])))
+
+;; ------- Methods to handle Views, Describe database to not return Agg and Join indexes in Firebolt ----------------
+;; All the functions below belong to describe-table.clj which are all private in metabase and cant be called or
+;; extended directly. Hence, needed to implement the entire function chain
+;; As we should only return public tables that are not external, SHOW TABLES/SHOW VIEWS cannot be used.
 (defmethod driver/describe-database :firebolt
   [_ {:keys [details] :as database}]
   {:tables
@@ -344,10 +323,6 @@
                   :fields (describe-table-fields driver conn table nil))
            ;; find PKs and mark them
            (add-table-pks (.getMetaData conn))))))
-
-; making between clause in a query to be inside brackets
-(defmethod hformat/fn-handler "between" [_ field lower upper]
-  (str "(" (hformat/to-sql-value field) " BETWEEN " (hformat/to-sql-value lower) " AND " (hformat/to-sql-value upper) ")"))
 
 ;-------------------------Supported features---------------------------
 
