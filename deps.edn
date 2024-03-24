@@ -2,9 +2,9 @@
  ["src" "resources"]
 
  :deps
- {com.firebolt/firebolt-jdbc {:mvn/version "3.0.0-SNAPSHOT"}} ;TODO: Change to the JDBC version supported new identity
+ {io.firebolt/firebolt-jdbc {:mvn/version "3.0.1"}}
  :mvn/repos
- {"releases" {:url "https://repo.repsy.io/mvn/firebolt/maven"}}
+; {"releases" {:url "https://repo.repsy.io/mvn/firebolt/maven"}}
 
  ;; build the driver with clojure -X:build
  :aliases
