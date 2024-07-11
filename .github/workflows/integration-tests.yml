@@ -50,9 +50,9 @@ jobs:
       - name: Add firebolt driver imports to metabase
         shell: bash
         run: |
-              sed --in-place '$ s/.$/\n  metabase\/firebolt           {:local\/root "firebolt"}}/' modules/drivers/deps.edn
-              sed --in-place '/:extra-paths/,+1 { /:extra-paths/! s/^\s*\["/\0modules\/drivers\/firebolt\/test"\n    "/ }' deps.edn
-              sed --in-place '/:check/,+3 {/:main-opts/ {n;s/\("[^"]*"\)/\1\n                "modules\/drivers\/firebolt\/src"/}}' deps.edn
+              sed --in-place '$ s/..$/\n  metabase\/firebolt           {:local\/root "firebolt"}}}/' modules/drivers/deps.edn
+              sed --in-place '/\s:drivers-dev/,+1 {/:extra-paths/,+1 {n;s/^\s*\["/\0modules\/drivers\/firebolt\/test"\n    "/ }}' deps.edn
+              sed --in-place '/\s:check/,+3 {/:main-opts/ {n;s/\("[^"]*"\)/\1\n                "modules\/drivers\/firebolt\/src"/}}' deps.edn
               export NODE_OPTIONS=--openssl-legacy-provider
               yarn build-static-viz
 
