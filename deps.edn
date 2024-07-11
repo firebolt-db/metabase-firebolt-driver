@@ -3,8 +3,6 @@
 
  :deps
  {io.firebolt/firebolt-jdbc {:mvn/version "3.1.0"}}
- :mvn/repos
-; {"releases" {:url "https://repo.repsy.io/mvn/firebolt/maven"}}
 
  ;; build the driver with clojure -X:build
  :aliases
