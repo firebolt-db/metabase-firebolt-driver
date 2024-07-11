@@ -53,12 +53,6 @@ jobs:
               sed --in-place '2s#$#\n  metabase/firebolt           {:local/root "firebolt"}#' modules/drivers/deps.edn
               sed --in-place '264s#$#\n    "modules/drivers/firebolt/test"#' deps.edn
               sed --in-place '299s#$#\n                                 "modules/drivers/firebolt/src"#' deps.edn
-              sed --in-place '$ s/.$//' modules/drivers/deps.edn
-              sed --in-place '$ a   :mvn/repos {"repsy" {:url "https://repo.repsy.io/mvn/firebolt/maven"}}}' modules/drivers/deps.edn
-              sed --in-place '2s#$#\n :mvn/repos {"repsy" {:url "https://repo.repsy.io/mvn/firebolt/maven"}}#' bin/build-drivers/deps.edn
-              sed --in-place '2s#$#\n :mvn/repos {"repsy" {:url "https://repo.repsy.io/mvn/firebolt/maven"}}#' bin/build-mb/deps.edn
-              sed --in-place '2s#$#\n :mvn/repos {"repsy" {:url "https://repo.repsy.io/mvn/firebolt/maven"}}#' bin/release/deps.edn
-              sed --in-place '152s#$#\n :mvn/repos {"repsy" {:url "https://repo.repsy.io/mvn/firebolt/maven"}}#' deps.edn
               export NODE_OPTIONS=--openssl-legacy-provider
               yarn build-static-viz
 
