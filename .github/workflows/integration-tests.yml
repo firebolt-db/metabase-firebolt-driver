@@ -19,7 +19,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: metabase/metabase
-          ref: "v0.44.0"
+          ref: "v0.48.0"
 
       - name: Checkout firebolt connector code
         uses: actions/checkout@v2

@@ -24,7 +24,7 @@
 
     [metabase.models
              [field :as field :refer [Field]]]
-            [metabase.mbql.util :as mbql.u]
+            [metabase.legacy-mbql.util :as mbql.u]
             [metabase.query-processor.util :as qputil])
   (:import [java.sql DatabaseMetaData Types Connection ResultSet]
            [java.time LocalTime OffsetDateTime OffsetTime ZonedDateTime]))
@@ -134,22 +134,22 @@
 (defmethod sql.qp/add-interval-honeysql-form :firebolt [_ dt amount unit] (h2x/+ dt [:raw (format "INTERVAL %d %s" (int amount) (name unit))]))
 
 ; Format a temporal value `t` as a SQL-style literal string, converting time datatype to SQL-style literal string
-(defmethod unprepare/unprepare-value [:firebolt LocalTime]
+(defmethod sql.qp/inline-value [:firebolt LocalTime]
   [_ t]
   (format "'%s'" t))
 
 ; Converting ZonedDateTime datatype to SQL-style literal string
-(defmethod unprepare/unprepare-value [:firebolt ZonedDateTime]
+(defmethod sql.qp/inline-value [:firebolt ZonedDateTime]
   [_ t]
   (format "timestamp '%s'" (u.date/format-sql (t/local-date-time t))))
 
 ; Converting OffsetDateTime datatype to SQL-style literal string
-(defmethod unprepare/unprepare-value [:firebolt OffsetDateTime]
+(defmethod sql.qp/inline-value [:firebolt OffsetDateTime]
   [_ t]
   (format "timestamp '%s'" (u.date/format-sql (t/local-date-time t))))
 
 ; Converting OffsetTime datatype to SQL-style literal string
-(defmethod unprepare/unprepare-value [:firebolt OffsetTime]
+(defmethod sql.qp/inline-value [:firebolt OffsetTime]
   [_ t]
   (format "timestamp '%s'" (u.date/format-sql (t/local-date-time t))))
 
@@ -326,27 +326,27 @@
 
 ;-------------------------Supported features---------------------------
 
-(defmethod driver/supports? [:firebolt :basic-aggregations]  [_ _] true)
+(defmethod driver/database-supports? [:firebolt :basic-aggregations]  [_ _] true)
 
-(defmethod driver/supports? [:firebolt :expression-aggregations]  [_ _] true)
+(defmethod driver/database-supports? [:firebolt :expression-aggregations]  [_ _] true)
 
-(defmethod driver/supports? [:firebolt :percentile-aggregations]  [_ _] true)
+(defmethod driver/database-supports? [:firebolt :percentile-aggregations]  [_ _] true)
 
-(defmethod driver/supports? [:firebolt :foreign-keys]  [_ _] true)
+(defmethod driver/database-supports? [:firebolt :foreign-keys]  [_ _] true)
 
-(defmethod driver/supports? [:firebolt :binning]  [_ _] true)
+(defmethod driver/database-supports? [:firebolt :binning]  [_ _] true)
 
-(defmethod driver/supports? [:firebolt :regex]  [_ _] true)
+(defmethod driver/database-supports? [:firebolt :regex]  [_ _] true)
 
-(defmethod driver/supports? [:firebolt :standard-deviation-aggregations]  [_ _] false)
+(defmethod driver/database-supports? [:firebolt :standard-deviation-aggregations]  [_ _] false)
 
-(defmethod driver/supports? [:firebolt :nested-queries]  [_ _] false)
+(defmethod driver/database-supports? [:firebolt :nested-queries]  [_ _] false)
 
-(defmethod driver/supports? [:firebolt :case-sensitivity-string-filter-options]  [_ _] false)
+(defmethod driver/database-supports? [:firebolt :case-sensitivity-string-filter-options]  [_ _] false)
 
-(defmethod driver/supports? [:firebolt :set-timezone]  [_ _] false)
+(defmethod driver/database-supports? [:firebolt :set-timezone]  [_ _] false)
 
-(defmethod driver/supports? [:firebolt :nested-fields]  [_ _] false)
+(defmethod driver/database-supports? [:firebolt :nested-fields]  [_ _] false)
 
 
 

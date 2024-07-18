@@ -8,7 +8,7 @@
              [config :as config]
              [driver :as driver]]
             [metabase.driver.ddl.interface :as ddl.i]
-            [metabase.driver.sql.util.unprepare :as unprepare]
+            [metabase.driver.sql.query-processor :as sql.qp]
             [metabase.driver.sql-jdbc.connection :as sql-jdbc.conn]
             [metabase.test.data.sql-jdbc
              [execute :as execute]
@@ -26,7 +26,7 @@
 (sql-jdbc.tx/add-test-extensions! :firebolt)
 
 ; during unit tests don't treat firebolt as having FK support
-(defmethod driver/supports? [:firebolt :foreign-keys] [_ _] (not config/is-test?))
+(defmethod driver/database-supports? [:firebolt :foreign-keys] [_ _] (not config/is-test?))
 
 ;;; ----------------------------------------------- Connection Details -----------------------------------------------
 
@@ -102,7 +102,7 @@
 
 ; loads data by adding ids
 (defmethod load-data/load-data! :firebolt [& args]
-  (apply load-data/load-data-add-ids! args))
+  (apply load-data/load-data-add-ids args))
 
 ; The firebolt JDBC driver doesn't support parameterized queries.So go ahead and deparameterize all the statements for now.
 (defmethod ddl/insert-rows-ddl-statements :firebolt
