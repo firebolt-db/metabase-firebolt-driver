@@ -9,8 +9,7 @@
             [metabase.test.data
              [datasets :as datasets]]
             [metabase.test.data.sql.ddl :as ddl]
-            [metabase.util.honeysql-extensions :as hx]
-            [metabase.query-processor-test :as qp.test]
+            [metabase.util.honey-sql-2 :as hx]
             [honeysql.core :as hsql]
             [metabase.driver.sql.query-processor :as sql.qp]
             [metabase.test.data.sql :as sql.tx]
@@ -174,14 +173,14 @@
 (deftest aggregations-test
   (mt/test-driver :firebolt
     (testing (str "make sure queries with two or more of the same aggregation type still work.")
-       (let [{:keys [rows columns]} (qp.test/rows+column-names
+       (let [{:keys [rows columns]} (mt/rows+column-names
                                      (mt/run-mbql-query checkins
                                                         {:aggregation [[:sum $user_id] [:sum $user_id]]}))]
          (is (= ["sum" "sum_2"]
                 columns))
          (is (= [[7929 7929]]
                 rows)))
-       (let [{:keys [rows columns]} (qp.test/rows+column-names
+       (let [{:keys [rows columns]} (mt/rows+column-names
                                      (mt/run-mbql-query checkins
                                                         {:aggregation [[:sum $user_id] [:sum $user_id] [:sum $user_id]]}))]
          (is (= ["sum" "sum_2" "sum_3"]
