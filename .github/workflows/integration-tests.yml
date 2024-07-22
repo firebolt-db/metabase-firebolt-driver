@@ -39,6 +39,15 @@ jobs:
           cli: '1.11.1.1155' # Clojure CLI based on tools.deps
           lein: '2.9.10'     # or use 'latest' to always provision latest version of leiningen
 
+      - name: Add firebolt driver imports to metabase
+        shell: bash
+        run: |
+          sed --in-place '$ s/..$/\n  metabase\/firebolt           {:local\/root "firebolt"}}}/' modules/drivers/deps.edn
+          sed --in-place '/\s:drivers-dev/,+1 {/:extra-paths/,+1 {n;s/^\s*\["/\0modules\/drivers\/firebolt\/test"\n    "/ }}' deps.edn
+          sed --in-place '/\s:check/,+3 {/:main-opts/ {n;s/\("[^"]*"\)/\1\n                "modules\/drivers\/firebolt\/src"/}}' deps.edn
+          export NODE_OPTIONS=--openssl-legacy-provider
+          yarn build-static-viz
+
       - name: "Build metabase"
         shell: bash
         run: |
@@ -46,15 +55,6 @@ jobs:
               cd modules/drivers
               clojure -X:deps prep
               cd ../..
-
-      - name: Add firebolt driver imports to metabase
-        shell: bash
-        run: |
-              sed --in-place '$ s/..$/\n  metabase\/firebolt           {:local\/root "firebolt"}}}/' modules/drivers/deps.edn
-              sed --in-place '/\s:drivers-dev/,+1 {/:extra-paths/,+1 {n;s/^\s*\["/\0modules\/drivers\/firebolt\/test"\n    "/ }}' deps.edn
-              sed --in-place '/\s:check/,+3 {/:main-opts/ {n;s/\("[^"]*"\)/\1\n                "modules\/drivers\/firebolt\/src"/}}' deps.edn
-              export NODE_OPTIONS=--openssl-legacy-provider
-              yarn build-static-viz
 
       - name: Setup database and engine
         id: setup
