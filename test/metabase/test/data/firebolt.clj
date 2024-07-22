@@ -8,8 +8,8 @@
              [config :as config]
              [driver :as driver]]
             [metabase.driver.ddl.interface :as ddl.i]
-            [metabase.driver.sql.query-processor :as sql.qp]
             [metabase.driver.sql-jdbc.connection :as sql-jdbc.conn]
+            [metabase.driver.sql.util.unprepare :as unprepare]
             [metabase.test.data.sql-jdbc
              [execute :as execute]
              [load-data :as load-data]]
