@@ -24,7 +24,7 @@
 
     [metabase.models
              [field :as field :refer [Field]]]
-            [metabase.legacy-mbql.util :as mbql.u]
+            [metabase.mbql.util :as mbql.u]
             [metabase.query-processor.util :as qputil])
   (:import [java.sql DatabaseMetaData Types Connection ResultSet]
            [java.time LocalTime OffsetDateTime OffsetTime ZonedDateTime]))
@@ -134,22 +134,22 @@
 (defmethod sql.qp/add-interval-honeysql-form :firebolt [_ dt amount unit] (h2x/+ dt [:raw (format "INTERVAL %d %s" (int amount) (name unit))]))
 
 ; Format a temporal value `t` as a SQL-style literal string, converting time datatype to SQL-style literal string
-(defmethod sql.qp/inline-value [:firebolt LocalTime]
+(defmethod unprepare/unprepare [:firebolt LocalTime]
   [_ t]
   (format "'%s'" t))
 
 ; Converting ZonedDateTime datatype to SQL-style literal string
-(defmethod sql.qp/inline-value [:firebolt ZonedDateTime]
+(defmethod unprepare/unprepare [:firebolt ZonedDateTime]
   [_ t]
   (format "timestamp '%s'" (u.date/format-sql (t/local-date-time t))))
 
 ; Converting OffsetDateTime datatype to SQL-style literal string
-(defmethod sql.qp/inline-value [:firebolt OffsetDateTime]
+(defmethod unprepare/unprepare [:firebolt OffsetDateTime]
   [_ t]
   (format "timestamp '%s'" (u.date/format-sql (t/local-date-time t))))
 
 ; Converting OffsetTime datatype to SQL-style literal string
-(defmethod sql.qp/inline-value [:firebolt OffsetTime]
+(defmethod unprepare/unprepare [:firebolt OffsetTime]
   [_ t]
   (format "timestamp '%s'" (u.date/format-sql (t/local-date-time t))))
 
