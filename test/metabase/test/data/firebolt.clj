@@ -102,7 +102,7 @@
 
 ; loads data by adding ids
 (defmethod load-data/load-data! :firebolt [& args]
-  (apply load-data/load-data-add-ids args))
+  (apply load-data/load-data-add-ids! args))
 
 ; The firebolt JDBC driver doesn't support parameterized queries.So go ahead and deparameterize all the statements for now.
 (defmethod ddl/insert-rows-ddl-statements :firebolt
