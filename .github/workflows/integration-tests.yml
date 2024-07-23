@@ -2,15 +2,7 @@ name: Run integration tests
 
 on:
   workflow_dispatch:
-    inputs:
-      database:
-        description: 'Database - a new one will be created if not provided'
-        required: false
-        default: ''
-      engine:
-        description: 'Engine - Will be created if database is not provided.'
-        required: false
-        default: ''
+
 jobs:
   run-integration-tests:
     runs-on: ubuntu-latest
@@ -19,7 +11,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: metabase/metabase
-          ref: "v0.44.0"
+          ref: "v0.48.0"
 
       - name: Checkout firebolt connector code
         uses: actions/checkout@v2
@@ -39,6 +31,15 @@ jobs:
           cli: '1.11.1.1155' # Clojure CLI based on tools.deps
           lein: '2.9.10'     # or use 'latest' to always provision latest version of leiningen
 
+      - name: Add firebolt driver imports to metabase
+        shell: bash
+        run: |
+          sed --in-place '$ s/..$/\n  metabase\/firebolt           {:local\/root "firebolt"}}}/' modules/drivers/deps.edn
+          sed --in-place '/\s:drivers-dev/,+1 {/:extra-paths/,+1 {n;s/^\s*\["/\0modules\/drivers\/firebolt\/test"\n    "/ }}' deps.edn
+          sed --in-place '/\s:check/,+3 {/:main-opts/ {n;s/\("[^"]*"\)/\1\n                "modules\/drivers\/firebolt\/src"/}}' deps.edn
+          export NODE_OPTIONS=--openssl-legacy-provider
+          yarn build-static-viz
+
       - name: "Build metabase"
         shell: bash
         run: |
@@ -47,24 +48,8 @@ jobs:
               clojure -X:deps prep
               cd ../..
 
-      - name: Add firebolt driver imports to metabase
-        shell: bash
-        run: |
-              sed --in-place '2s#$#\n  metabase/firebolt           {:local/root "firebolt"}#' modules/drivers/deps.edn
-              sed --in-place '264s#$#\n    "modules/drivers/firebolt/test"#' deps.edn
-              sed --in-place '299s#$#\n                                 "modules/drivers/firebolt/src"#' deps.edn
-              sed --in-place '$ s/.$//' modules/drivers/deps.edn
-              sed --in-place '$ a   :mvn/repos {"repsy" {:url "https://repo.repsy.io/mvn/firebolt/maven"}}}' modules/drivers/deps.edn
-              sed --in-place '2s#$#\n :mvn/repos {"repsy" {:url "https://repo.repsy.io/mvn/firebolt/maven"}}#' bin/build-drivers/deps.edn
-              sed --in-place '2s#$#\n :mvn/repos {"repsy" {:url "https://repo.repsy.io/mvn/firebolt/maven"}}#' bin/build-mb/deps.edn
-              sed --in-place '2s#$#\n :mvn/repos {"repsy" {:url "https://repo.repsy.io/mvn/firebolt/maven"}}#' bin/release/deps.edn
-              sed --in-place '152s#$#\n :mvn/repos {"repsy" {:url "https://repo.repsy.io/mvn/firebolt/maven"}}#' deps.edn
-              export NODE_OPTIONS=--openssl-legacy-provider
-              yarn build-static-viz
-
       - name: Setup database and engine
         id: setup
-        if: ${{ github.event.inputs.database == '' }}
         uses: firebolt-db/integration-testing-setup@v1
         with:
           firebolt-username: ${{ secrets.FIREBOLT_STG_USERNAME }}
@@ -72,24 +57,12 @@ jobs:
           api-endpoint: "api.staging.firebolt.io"
           region: "us-east-1"
 
-      - name: Determine database name
-        id: find-database-name
-        run: |
-          if ! [[ -z "${{ github.event.inputs.database }}" ]]; then
-             echo "database_name=${{ github.event.inputs.database }}" >>  $GITHUB_OUTPUT
-          else
-             echo "database_name=${{ steps.setup.outputs.database_name }}" >>  $GITHUB_OUTPUT
-          fi
-      - name: Determine engine name
-        id: find-engine-name
-        run: |
-          if ! [[ -z "${{ github.event.inputs.database }}" ]]; then
-             echo "engine_name=${{ github.event.inputs.engine }}" >>  $GITHUB_OUTPUT
-          else
-             echo "engine_name=${{ steps.setup.outputs.engine_name }}" >>  $GITHUB_OUTPUT
-          fi
-
       - name: Run metabase integration tests
-        shell: bash
+        env:
+          DRIVERS: firebolt
+          MB_FIREBOLT_TEST_USER: ${{ secrets.FIREBOLT_STG_USERNAME }}
+          MB_FIREBOLT_TEST_PASSWORD: ${{ secrets.FIREBOLT_STG_PASSWORD }}
+          MB_FIREBOLT_TEST_DB: ${{ steps.setup.outputs.database_name }}
+          MB_FIREBOLT_TEST_ADDITIONAL_OPTIONS: engine=${{ steps.setup.outputs.engine_name }}&environment=staging
         run: |
-          DRIVERS=firebolt MB_FIREBOLT_TEST_USER=${{ secrets.SERVICE_ID_STG }} MB_FIREBOLT_TEST_PASSWORD="${{ secrets.SERVICE_SECRET_STG }}" MB_FIREBOLT_TEST_DB=${{ steps.find-database-name.outputs.database_name }} MB_FIREBOLT_TEST_ADDITIONAL_OPTIONS='engine=${{ steps.find-engine-name.outputs.engine_name }}&environment=staging' clojure -X:dev:drivers:drivers-dev:test
+          clojure -X:dev:drivers:drivers-dev:test

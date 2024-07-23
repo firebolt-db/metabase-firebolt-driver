@@ -65,11 +65,7 @@ You should see a message on startup similar to:
 
 ## Compatibility matrix
 
-| Firebolt Version | Metabase Release | Driver Version |
-|------------------|------------------|----------------|
-| 1                | <=0.47.x         | <=1.0.13       |
-| 1                | <=0.47.x         | <=1.0.13       |
-| 2                | <=0.47.x         | 3.0.0          |
-| 1&2              | <=0.47.x         | 3.0.1          |
-| 1&2              | 0.48.x           | 3.0.3          |
-| 1&2              | 0.49.x           | 3.0.3          |
+| Metabase Release | Driver Version |
+|------------------|----------------|
+| <=0.47.x         | 3.0.1          |
+| \>=0.48.x        | 3.1.0          |

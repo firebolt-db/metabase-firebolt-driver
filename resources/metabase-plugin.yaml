@@ -25,9 +25,8 @@ driver:
       placeholder: database name
     - name: account
       display-name: Account name
-      required: false
+      required: true
       placeholder: account name
-      helper-text: If not specified, the default account will be picked.
     - name: engine_name
       display-name: Engine name
       required: false

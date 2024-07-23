@@ -34,12 +34,19 @@
 
 ;;; ---------------------------------------------- sql-jdbc.connection -----------------------------------------------
 
+(defn parse-additional-options [query-string]
+      (let [pairs (clojure.string/split query-string #"&")
+            kv-pairs (map #(clojure.string/split % #"=") pairs)]
+           (into {} (map (fn [[k v]] [(keyword k) v]) kv-pairs))))
+
 ; Create database specification and obtain connection properties for connecting to a Firebolt database.
 (defmethod sql-jdbc.conn/connection-details->spec :firebolt
   [_ {:keys [db]
       :or    {db ""}
       :as   details}]
-  (let [spec {:classname "com.firebolt.FireboltDriver", :subprotocol "firebolt", :subname (str "//api." (System/getProperty "env" "app") ".firebolt.io/" db), :ssl true}]
+  (let [
+        env (System/getProperty "env" (get (parse-additional-options (get details :additional-options "")) :environment "app"))
+        spec {:classname "com.firebolt.FireboltDriver", :subprotocol "firebolt", :subname (str "//api." env ".firebolt.io/" db), :ssl true}]
     (-> (merge spec (select-keys details [:password :classname :subprotocol :user :subname :additional-options :account :engine_name :env]))
         (sql-jdbc.common/handle-additional-options  (select-keys details [:password :classname :subprotocol :user :subname :additional-options :account :engine_name :env]))
         )))
@@ -134,22 +141,22 @@
 (defmethod sql.qp/add-interval-honeysql-form :firebolt [_ dt amount unit] (h2x/+ dt [:raw (format "INTERVAL %d %s" (int amount) (name unit))]))
 
 ; Format a temporal value `t` as a SQL-style literal string, converting time datatype to SQL-style literal string
-(defmethod unprepare/unprepare-value [:firebolt LocalTime]
+(defmethod unprepare/unprepare [:firebolt LocalTime]
   [_ t]
   (format "'%s'" t))
 
 ; Converting ZonedDateTime datatype to SQL-style literal string
-(defmethod unprepare/unprepare-value [:firebolt ZonedDateTime]
+(defmethod unprepare/unprepare [:firebolt ZonedDateTime]
   [_ t]
   (format "timestamp '%s'" (u.date/format-sql (t/local-date-time t))))
 
 ; Converting OffsetDateTime datatype to SQL-style literal string
-(defmethod unprepare/unprepare-value [:firebolt OffsetDateTime]
+(defmethod unprepare/unprepare [:firebolt OffsetDateTime]
   [_ t]
   (format "timestamp '%s'" (u.date/format-sql (t/local-date-time t))))
 
 ; Converting OffsetTime datatype to SQL-style literal string
-(defmethod unprepare/unprepare-value [:firebolt OffsetTime]
+(defmethod unprepare/unprepare [:firebolt OffsetTime]
   [_ t]
   (format "timestamp '%s'" (u.date/format-sql (t/local-date-time t))))
 
@@ -326,27 +333,27 @@
 
 ;-------------------------Supported features---------------------------
 
-(defmethod driver/supports? [:firebolt :basic-aggregations]  [_ _] true)
+(defmethod driver/database-supports? [:firebolt :basic-aggregations]  [_ _] true)
 
-(defmethod driver/supports? [:firebolt :expression-aggregations]  [_ _] true)
+(defmethod driver/database-supports? [:firebolt :expression-aggregations]  [_ _] true)
 
-(defmethod driver/supports? [:firebolt :percentile-aggregations]  [_ _] true)
+(defmethod driver/database-supports? [:firebolt :percentile-aggregations]  [_ _] true)
 
-(defmethod driver/supports? [:firebolt :foreign-keys]  [_ _] true)
+(defmethod driver/database-supports? [:firebolt :foreign-keys]  [_ _] true)
 
-(defmethod driver/supports? [:firebolt :binning]  [_ _] true)
+(defmethod driver/database-supports? [:firebolt :binning]  [_ _] true)
 
-(defmethod driver/supports? [:firebolt :regex]  [_ _] true)
+(defmethod driver/database-supports? [:firebolt :regex]  [_ _] true)
 
-(defmethod driver/supports? [:firebolt :standard-deviation-aggregations]  [_ _] false)
+(defmethod driver/database-supports? [:firebolt :standard-deviation-aggregations]  [_ _] false)
 
-(defmethod driver/supports? [:firebolt :nested-queries]  [_ _] false)
+(defmethod driver/database-supports? [:firebolt :nested-queries]  [_ _] false)
 
-(defmethod driver/supports? [:firebolt :case-sensitivity-string-filter-options]  [_ _] false)
+(defmethod driver/database-supports? [:firebolt :case-sensitivity-string-filter-options]  [_ _] false)
 
-(defmethod driver/supports? [:firebolt :set-timezone]  [_ _] false)
+(defmethod driver/database-supports? [:firebolt :set-timezone]  [_ _] false)
 
-(defmethod driver/supports? [:firebolt :nested-fields]  [_ _] false)
+(defmethod driver/database-supports? [:firebolt :nested-fields]  [_ _] false)
 
 
 

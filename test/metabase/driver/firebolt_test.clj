@@ -9,9 +9,7 @@
             [metabase.test.data
              [datasets :as datasets]]
             [metabase.test.data.sql.ddl :as ddl]
-            [metabase.util.honeysql-extensions :as hx]
-            [metabase.query-processor-test :as qp.test]
-            [honeysql.core :as hsql]
+            [metabase.util.honey-sql-2 :as hx]
             [metabase.driver.sql.query-processor :as sql.qp]
             [metabase.test.data.sql :as sql.tx]
             [metabase.test.data.interface :as tx]
@@ -24,13 +22,17 @@
              [sync :as sync]
              [util :as u]]
             [clojure.java.jdbc :as jdbc]
-            [toucan.db :as db]
             [metabase.models
-             [database :refer [Database]]])
+             [database :refer [Database]]]
+            [metabase.query-processor.store :as qp.store]
+            [metabase.lib.test-util :as lib.tu]
+            [honey.sql :as sql]
+            [honey.sql.helpers :as helpers]
+    )
   (:import [java.sql DatabaseMetaData Types Connection ResultSet]
            [java.time LocalTime OffsetDateTime OffsetTime ZonedDateTime]))
 
-; TEST - Connection details specifiaction
+; TEST - Connection details specification
 (deftest connection-details->spec-test
   (doseq [[^String expected-spec details]
           [[
@@ -81,45 +83,46 @@
 
 ; TEST - truncating date functions
 (deftest date-functions-test
-  (is (= (hsql/call :date_trunc (hx/literal "minute") (metabase.util.honeysql-extensions/with-type-info (hsql/call :cast "2021-06-06 12:12:12" #sql/raw "timestamp") #:metabase.util.honeysql-extensions{:database-type "timestamp"}))
+  (is (= [:date_trunc (hx/literal "minute") (hx/with-type-info [:cast "2021-06-06 12:12:12" [:raw "timestamp"]] #:hx{:database-type "timestamp"})]
          (sql.qp/date :firebolt :minute "2021-06-06 12:12:12")))
-  (is (= (hsql/call :date_trunc (hx/literal "hour") (metabase.util.honeysql-extensions/with-type-info (hsql/call :cast "2021-06-06 12:12:12" #sql/raw "timestamp") #:metabase.util.honeysql-extensions{:database-type "timestamp"}))
+  (is (= [:date_trunc (hx/literal "hour") (hx/with-type-info [:cast "2021-06-06 12:12:12" [:raw "timestamp"]] #:hx{:database-type "timestamp"})]
          (sql.qp/date :firebolt :hour "2021-06-06 12:12:12")))
-  (is (= (hsql/call :date_trunc (hx/literal "day") "2021-06-06 12:12:12")
+  (is (= [:date_trunc (hx/literal "day") "2021-06-06 12:12:12"]
          (sql.qp/date :firebolt :day "2021-06-06 12:12:12")))
-  (is (= (hsql/call :date_trunc (hx/literal "month") "2021-06-06 12:12:12")
+  (is (= [:date_trunc (hx/literal "month") "2021-06-06 12:12:12"]
          (sql.qp/date :firebolt :month "2021-06-06 12:12:12")))
-  (is (= (hsql/call :date_trunc (hx/literal "quarter") "2021-06-06 12:12:12")
+  (is (= [:date_trunc (hx/literal "quarter") "2021-06-06 12:12:12"]
          (sql.qp/date :firebolt :quarter "2021-06-06 12:12:12")))
-  (is (= (hsql/call :date_trunc (hx/literal "year") "2021-06-06 12:12:12")
+  (is (= [:date_trunc (hx/literal "year") "2021-06-06 12:12:12"]
          (sql.qp/date :firebolt :year "2021-06-06 12:12:12")))
-  (is (= (hsql/call :to_timestamp "2021-06-06 12:12:12")
+  (is (= [:to_timestamp "2021-06-06 12:12:12"]
          (sql.qp/unix-timestamp->honeysql :firebolt :seconds "2021-06-06 12:12:12"))))
 
 ; TEST - extracting the part of date functions
 (deftest date-extraction-functions-test
-  (is (= (hsql/call :to_minute (metabase.util.honeysql-extensions/with-type-info (hsql/call :cast "2021-06-06 12:12:12" #sql/raw "timestamp") #:metabase.util.honeysql-extensions{:database-type "timestamp"}))
+  (is (= [:to_minute (hx/with-type-info [:cast "2021-06-06 12:12:12" [:raw "timestamp"]] #:hx{:database-type "timestamp"})]
          (sql.qp/date :firebolt :minute-of-hour "2021-06-06 12:12:12")))
-  (is (= (hsql/call :to_hour (metabase.util.honeysql-extensions/with-type-info (hsql/call :cast "2021-06-06 12:12:12" #sql/raw "timestamp") #:metabase.util.honeysql-extensions{:database-type "timestamp"}))
+  (is (= [:to_hour (hx/with-type-info [:cast "2021-06-06 12:12:12" [:raw "timestamp"]] #:hx{:database-type "timestamp"})]
          (sql.qp/date :firebolt :hour-of-day "2021-06-06 12:12:12")))
-  (is (= (hsql/call :to_day_of_month "2021-06-06 12:12:12")
+  (is (= [:to_day_of_month "2021-06-06 12:12:12"]
          (sql.qp/date :firebolt :day-of-month "2021-06-06 12:12:12")))
-  (is (= (hsql/call :to_day_of_year "2021-06-06 12:12:12")
+  (is (= [:to_day_of_year "2021-06-06 12:12:12"]
          (sql.qp/date :firebolt :day-of-year "2021-06-06 12:12:12")))
-  (is (= (hsql/call :to_week "2021-06-06 12:12:12")
+  (is (= [:to_week "2021-06-06 12:12:12"]
          (sql.qp/date :firebolt :week-of-year "2021-06-06 12:12:12")))
-  (is (= (hsql/call :to_month "2021-06-06 12:12:12")
+  (is (= [:to_month "2021-06-06 12:12:12"]
          (sql.qp/date :firebolt :month-of-year "2021-06-06 12:12:12")))
-  (is (= (hsql/call :to_quarter "2021-06-06 12:12:12")
+  (is (= [:to_quarter "2021-06-06 12:12:12"]
          (sql.qp/date :firebolt :quarter-of-year "2021-06-06 12:12:12"))))
 
 (deftest current-datetime-honeysql-form-test
-  (is (= (metabase.util.honeysql-extensions/with-type-info (hsql/call :cast #sql/raw "NOW()" #sql/raw "timestamp") #:metabase.util.honeysql-extensions{:database-type "timestamp"})
+  (is (= (hx/with-type-info [:cast [:raw "NOW()"] [:raw "timestamp"]] #:hx{:database-type "timestamp"})
      (sql.qp/current-datetime-honeysql-form :firebolt))))
 
-(deftest current-db-time-native-query-test
-  (is (= "SELECT CAST(CAST(NOW() AS TIMESTAMP) AS VARCHAR(24))"
-     (driver.common/current-db-time-native-query :firebolt))))
+; TODO: Test db-default-timezone instead
+;(deftest current-db-time-native-query-test
+;  (is (= "SELECT CAST(CAST(NOW() AS TIMESTAMP) AS VARCHAR(24))"
+;     (driver.common/current-db-time-native-query :firebolt))))
 
 (deftest unprepare-values-test
   (is (= "class java.time.LocalTime"
@@ -130,25 +133,25 @@
 
 (deftest driver-support-test
   (is (= false
-         (driver/supports? :firebolt :case-sensitivity-string-filter-options)))
+         (driver/database-supports? :firebolt :case-sensitivity-string-filter-options)))
   (is (= true
-         (driver/supports? :firebolt :basic-aggregations)))
+         (driver/database-supports? :firebolt :basic-aggregations)))
   (is (= true
-         (driver/supports? :firebolt :expression-aggregations)))
+         (driver/database-supports? :firebolt :expression-aggregations)))
   (is (= false
-         (driver/supports? :firebolt :standard-deviation-aggregations)))
+         (driver/database-supports? :firebolt :standard-deviation-aggregations)))
   (is (= true
-         (driver/supports? :firebolt :percentile-aggregations)))
+         (driver/database-supports? :firebolt :percentile-aggregations)))
   (is (= false
-         (driver/supports? :firebolt :nested-fields)))
+         (driver/database-supports? :firebolt :nested-fields)))
   (is (= false
-         (driver/supports? :firebolt :set-timezone)))
+         (driver/database-supports? :firebolt :set-timezone)))
   (is (= false
-         (driver/supports? :firebolt :nested-queries)))
+         (driver/database-supports? :firebolt :nested-queries)))
   (is (= true
-         (driver/supports? :firebolt :binning)))
+         (driver/database-supports? :firebolt :binning)))
   (is (= true
-         (driver/supports? :firebolt :regex))))
+         (driver/database-supports? :firebolt :regex))))
 
 
 (deftest ddl-statements-test
@@ -174,14 +177,14 @@
 (deftest aggregations-test
   (mt/test-driver :firebolt
     (testing (str "make sure queries with two or more of the same aggregation type still work.")
-       (let [{:keys [rows columns]} (qp.test/rows+column-names
+       (let [{:keys [rows columns]} (mt/rows+column-names
                                      (mt/run-mbql-query checkins
                                                         {:aggregation [[:sum $user_id] [:sum $user_id]]}))]
          (is (= ["sum" "sum_2"]
                 columns))
          (is (= [[7929 7929]]
                 rows)))
-       (let [{:keys [rows columns]} (qp.test/rows+column-names
+       (let [{:keys [rows columns]} (mt/rows+column-names
                                      (mt/run-mbql-query checkins
                                                         {:aggregation [[:sum $user_id] [:sum $user_id] [:sum $user_id]]}))]
          (is (= ["sum" "sum_2" "sum_3"]
@@ -200,14 +203,24 @@
     (let [details (mt/dbdef->connection-details :firebolt :db {:database-name  (tx/db-test-env-var-or-throw :firebolt :db)})
           spec    (sql-jdbc.conn/connection-details->spec :firebolt details)]
     ;; create the DB object
-    (mt/with-temp Database [database {:engine :firebolt, :details (assoc details :db  (tx/db-test-env-var-or-throw :firebolt :db))}]
-      (let [sync! #(sync/sync-database! database)]
-      ;; create a view
-      (jdbc/execute! spec ["DROP VIEW IF EXISTS \"example_view\""])
-      (jdbc/execute! spec ["CREATE VIEW \"example_view\" AS SELECT 'hello world' AS \"name\""])
-        ;; now sync the DB
-        (sync!)
-        ;; now take a look at the Tables in the database, there should be an entry for the view
-        (is (= [{:name "example_view"}]
-              (filter (has-value :name "example_view") (map (partial into {})
-              (db/select [Table :name] :db_id (u/the-id database))))))))))))
+         (qp.store/with-metadata-provider (lib.tu/mock-metadata-provider
+               {:databases [{:engine :firebolt
+                             :details (assoc details :db (tx/db-test-env-var-or-throw :firebolt :db))}]})
+                  (let [database (first (:databases (lib.tu/mock-metadata-provider
+                                                      {:databases [{:engine :firebolt
+                                                                    :details (assoc details :db (tx/db-test-env-var-or-throw :firebolt :db))}]})))
+                        sync! #(sync/sync-database! database)]
+                  ;; create a view
+                  (jdbc/execute! spec ["DROP VIEW IF EXISTS \"example_view\""])
+                  (jdbc/execute! spec ["CREATE VIEW \"example_view\" AS SELECT 'hello world' AS \"name\""])
+                  ;; now sync the DB
+                  (sync!)
+                  ;; now take a look at the Tables in the database, there should be an entry for the view
+                  (is (= [{:name "example_view"}]
+                         (filter (fn [row] (= "example_view" (:name row)))
+                                 (map (partial into {})
+                                      (jdbc/execute! spec
+                                                     (-> (helpers/select :name)
+                                                         (helpers/from :Table)
+                                                         (helpers/where [:= :db_id (u/the-id database)])
+                                                         sql/format))))))))))))
