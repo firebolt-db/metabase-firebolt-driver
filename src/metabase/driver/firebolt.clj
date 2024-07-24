@@ -125,7 +125,7 @@
   :monday)
 
 ; Modify start of week to monday
-(defn- to-start-of-week [expr] [:'toMonday expr])
+(defn- to-start-of-week [expr] [:date_trunc "week" expr])
 (defmethod sql.qp/date [:firebolt :week] [driver _ expr] (sql.qp/adjust-start-of-week driver to-start-of-week expr))
 
 ; Return a appropriate HoneySQL form for converting a Unix timestamp integer field or value to an proper SQL Timestamp.
@@ -135,24 +135,24 @@
 (defmethod sql.qp/add-interval-honeysql-form :firebolt [_ dt amount unit] (h2x/+ dt [:raw (format "INTERVAL %d %s" (int amount) (name unit))]))
 
 ; Format a temporal value `t` as a SQL-style literal string, converting time datatype to SQL-style literal string
-(defmethod unprepare/unprepare [:firebolt LocalTime]
+(defmethod unprepare/unprepare-value [:firebolt LocalTime]
   [_ t]
   (format "'%s'" t))
 
 ; Converting ZonedDateTime datatype to SQL-style literal string
-(defmethod unprepare/unprepare [:firebolt ZonedDateTime]
+(defmethod unprepare/unprepare-value [:firebolt ZonedDateTime]
   [_ t]
-  (format "timestamp '%s'" (u.date/format-sql (t/local-date-time t))))
+  (format "timestamptz '%s'" (u.date/format-sql (t/local-date-time t))))
 
 ; Converting OffsetDateTime datatype to SQL-style literal string
-(defmethod unprepare/unprepare [:firebolt OffsetDateTime]
+(defmethod unprepare/unprepare-value [:firebolt OffsetDateTime]
   [_ t]
-  (format "timestamp '%s'" (u.date/format-sql (t/local-date-time t))))
+  (format "timestamptz '%s'" (u.date/format-sql (t/local-date-time t))))
 
 ; Converting OffsetTime datatype to SQL-style literal string
-(defmethod unprepare/unprepare [:firebolt OffsetTime]
+(defmethod unprepare/unprepare-value [:firebolt OffsetTime]
   [_ t]
-  (format "timestamp '%s'" (u.date/format-sql (t/local-date-time t))))
+  (format "timestamptz '%s'" (u.date/format-sql (t/local-date-time t))))
 
 (defmethod sql.qp/cast-temporal-string [:firebolt :Coercion/ISO8601->Time]
  [_driver _semantic_type expr]
