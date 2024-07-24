@@ -195,8 +195,8 @@
             (let [hsql-field (sql.qp/->honeysql :firebolt field)
                   hsql-value (sql.qp/->honeysql :firebolt value)]
                     (if (get options :case-sensitive true)
-                           [:> [:'positionUTF8                hsql-field hsql-value] 0]
-                           [:> [:'positionCaseInsensitiveUTF8 hsql-field hsql-value] 0])))
+                           [:> [:STRPOS hsql-field hsql-value] 0]
+                           [:> [:STRPOS [:LOWER hsql-field] [:LOWER hsql-value]] 0])))
 
 ;; ------- Methods to handle Views, Describe database to not return Agg and Join indexes in Firebolt ----------------
 ;; All the functions below belong to describe-table.clj which are all private in metabase and cant be called or
