@@ -141,7 +141,7 @@
 ; Format a temporal value `t` as a SQL-style literal string, converting time datatype to SQL-style literal string
 (defmethod unprepare/unprepare-value [:firebolt LocalTime]
   [_ t]
-  (format "to_timestamp('%s', 'HH24:MI:SS')" t))
+  (format "timestamp '%s'" (t/sql-timestamp t)))
 
 ; Converting ZonedDateTime datatype to SQL-style literal string
 (defmethod unprepare/unprepare-value [:firebolt ZonedDateTime]
