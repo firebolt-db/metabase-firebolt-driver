@@ -102,28 +102,22 @@
 ;;; ------------------------------------------------- date functions -------------------------------------------------
 
 ; If `expr` is a date, we need to cast it to a timestamp before we can truncate to a finer granularity
-(defmethod sql.qp/date [:firebolt :minute] [_ _ expr] [:'toStartOfMinute expr])
-(defmethod sql.qp/date [:firebolt :hour] [_ _ expr] [:'toStartOfHour expr])
-(defmethod sql.qp/date [:firebolt :day] [_ _ expr] (h2x/->date expr))
-(defmethod sql.qp/date [:firebolt :month] [_ _ expr] [:'toStartOfMonth expr])
-(defmethod sql.qp/date [:firebolt :quarter] [_ _ expr] [:'toStartOfQuarter expr])
-(defmethod sql.qp/date [:firebolt :year] [_ _ expr] [:'toStartOfYear expr])
+(defmethod sql.qp/date [:firebolt :minute] [_ _ expr] [:date_trunc "minute" expr])
+(defmethod sql.qp/date [:firebolt :hour] [_ _ expr] [:date_trunc "hour" expr])
+(defmethod sql.qp/date [:firebolt :day] [_ _ expr] [:date_trunc "day" expr])
+(defmethod sql.qp/date [:firebolt :month] [_ _ expr] [:date_trunc "month" expr])
+(defmethod sql.qp/date [:firebolt :quarter] [_ _ expr] [:date_trunc "quarter" expr])
+(defmethod sql.qp/date [:firebolt :year] [_ _ expr] [:date_trunc "year" expr])
 
 ; Extraction functions
-(defmethod sql.qp/date [:firebolt :minute-of-hour] [_ _ expr] [:'toMinute expr])
-(defmethod sql.qp/date [:firebolt :hour-of-day] [_ _ expr] [:'toHour expr])
-(defmethod sql.qp/date [:firebolt :day-of-week]     [_ _ expr] [:'toDayOfWeek expr])
-(defmethod sql.qp/date [:firebolt :day-of-month] [_ _ expr] [:'toDayOfMonth expr])
-(defn- to-start-of-year [expr] [:'toStartOfYear expr])
-(defn- to-relative-day-num [expr] [:'toRelativeDayNum expr])
-(defmethod sql.qp/date [:firebolt :day-of-year] [_ _ expr]
-           (h2x/+
-             (h2x/- (to-relative-day-num expr)
-                    (to-relative-day-num (to-start-of-year expr)))
-             1))
-(defmethod sql.qp/date [:firebolt :week-of-year]    [_ _ expr] [:'toWeekOfYear expr])
-(defmethod sql.qp/date [:firebolt :month-of-year] [_ _ expr] [:'toMonth expr])
-(defmethod sql.qp/date [:firebolt :quarter-of-year] [_ _ expr] [:'toQuaterOfYear expr])
+(defmethod sql.qp/date [:firebolt :minute-of-hour] [_ _ expr] [:extract :minute :from expr])
+(defmethod sql.qp/date [:firebolt :hour-of-day] [_ _ expr] [:extract :hour :from expr])
+(defmethod sql.qp/date [:firebolt :day-of-week]     [_ _ expr] [:extract :isodow :from expr])
+(defmethod sql.qp/date [:firebolt :day-of-month] [_ _ expr] [:extract :day :from expr])
+(defmethod sql.qp/date [:firebolt :day-of-year] [_ _ expr] [:extract :doy :from expr])
+(defmethod sql.qp/date [:firebolt :week-of-year]    [_ _ expr] [:extract :week :from expr])
+(defmethod sql.qp/date [:firebolt :month-of-year] [_ _ expr] [:extract :month :from expr])
+(defmethod sql.qp/date [:firebolt :quarter-of-year] [_ _ expr] [:extract :quarter :from expr])
 
 ; Set start of week to be monday
 (defmethod driver/db-start-of-week :firebolt
