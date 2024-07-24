@@ -19,14 +19,15 @@
             [metabase.connection-pool :as connection-pool]
             [metabase.driver.sql-jdbc.execute :as sql-jdbc.execute]
             [clojure.tools.logging :as log]
-            [metabase.util :as u])
+            [metabase.util :as u]
+    )
   (:import [java.sql ResultSet Connection DriverManager PreparedStatement SQLException]))
 
 
 (sql-jdbc.tx/add-test-extensions! :firebolt)
 
 ; during unit tests don't treat firebolt as having FK support
-(defmethod driver/database-supports? [:firebolt :foreign-keys] [_ _] (not config/is-test?))
+(defmethod driver/database-supports? [:firebolt :foreign-keys] [_ _ _] (not config/is-test?))
 
 ;;; ----------------------------------------------- Connection Details -----------------------------------------------
 
@@ -122,7 +123,6 @@
   [driver spec table-identifier row-or-rows]
 
   (let [statements (ddl/insert-rows-ddl-statements driver table-identifier row-or-rows)]
-    (with-open [conn (jdbc-spec->connection spec)]
       (try
         (doseq [sql+args statements]
           (log/tracef "[insert] %s" (pr-str sql+args))
@@ -131,7 +131,7 @@
         (catch SQLException e
           (println (u/format-color 'red "INSERT FAILED: \n%s\n" statements))
           (jdbc/print-sql-exception-chain e)
-          (throw e))))))
+          (throw e)))))
 
 ; Modified the table name to be in the format of db_name_table_name.
 ; So get the table and view names to make all test cases to use this format while forming the query to run tests

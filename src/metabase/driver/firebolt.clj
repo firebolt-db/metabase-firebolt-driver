@@ -56,7 +56,7 @@
    (let [connection (sql-jdbc.conn/connection-details->spec driver (ssh/include-ssh-tunnel! details))]
      (= 1 (first (vals (first (jdbc/query connection ["SELECT 1"])))))))
 
-(defmethod driver/db-default-timezone :firebolt []  "UTC" ) ; possible parameters db-default-timezone
+(defmethod driver/db-default-timezone :firebolt [_ _]  "UTC" ) ; possible parameters db-default-timezone
 
 ;;; ------------------------------------------------- sql-jdbc.sync --------------------------------------------------
 
@@ -233,7 +233,7 @@
   SELECT * query."
   [driver ^Connection conn table-schema table-name]
   ;; some DBs (:sqlite) don't actually return the correct metadata for LIMIT 0 queries
-  (let [[sql & params] (i/fallback-metadata-query driver table-schema table-name)]
+  (let [[sql & params] (i/fallback-metadata-query driver table-schema nil table-name)]
     (reify clojure.lang.IReduceInit
       (reduce [_ rf init]
         (with-open [stmt (common/prepare-statement driver conn sql params)
@@ -333,27 +333,27 @@
 
 ;-------------------------Supported features---------------------------
 
-(defmethod driver/database-supports? [:firebolt :basic-aggregations]  [_ _] true)
+(defmethod driver/database-supports? [:firebolt :basic-aggregations]  [_ _ _] true)
 
-(defmethod driver/database-supports? [:firebolt :expression-aggregations]  [_ _] true)
+(defmethod driver/database-supports? [:firebolt :expression-aggregations]  [_ _ _] true)
 
-(defmethod driver/database-supports? [:firebolt :percentile-aggregations]  [_ _] true)
+(defmethod driver/database-supports? [:firebolt :percentile-aggregations]  [_ _ _] true)
 
-(defmethod driver/database-supports? [:firebolt :foreign-keys]  [_ _] true)
+(defmethod driver/database-supports? [:firebolt :foreign-keys]  [_ _ _] true)
 
-(defmethod driver/database-supports? [:firebolt :binning]  [_ _] true)
+(defmethod driver/database-supports? [:firebolt :binning]  [_ _ _] true)
 
-(defmethod driver/database-supports? [:firebolt :regex]  [_ _] true)
+(defmethod driver/database-supports? [:firebolt :regex]  [_ _ _] true)
 
-(defmethod driver/database-supports? [:firebolt :standard-deviation-aggregations]  [_ _] false)
+(defmethod driver/database-supports? [:firebolt :standard-deviation-aggregations]  [_ _ _] false)
 
-(defmethod driver/database-supports? [:firebolt :nested-queries]  [_ _] false)
+(defmethod driver/database-supports? [:firebolt :nested-queries]  [_ _ _] false)
 
-(defmethod driver/database-supports? [:firebolt :case-sensitivity-string-filter-options]  [_ _] false)
+(defmethod driver/database-supports? [:firebolt :case-sensitivity-string-filter-options]  [_ _ _] false)
 
-(defmethod driver/database-supports? [:firebolt :set-timezone]  [_ _] false)
+(defmethod driver/database-supports? [:firebolt :set-timezone]  [_ _ _] false)
 
-(defmethod driver/database-supports? [:firebolt :nested-fields]  [_ _] false)
+(defmethod driver/database-supports? [:firebolt :nested-fields]  [_ _ _] false)
 
 
 
