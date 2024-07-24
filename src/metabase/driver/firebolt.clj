@@ -4,7 +4,7 @@
              [set :as set]]
             [clojure.java.jdbc :as jdbc]
             [clojure.tools.logging  :as log]
-            [java-time :as t]
+            [java-time.api :as t]
             [medley.core :as m]
             [metabase.driver :as driver]
             [metabase.driver.sql-jdbc
@@ -58,6 +58,7 @@
 
 (defmethod driver/db-default-timezone :firebolt [_ _]  "UTC" ) ; possible parameters db-default-timezone
 
+(defmethod sql.qp/honey-sql-version :firebolt [_] 2)
 ;;; ------------------------------------------------- sql-jdbc.sync --------------------------------------------------
 
 ; Define mapping of firebolt data types to base type
@@ -101,23 +102,26 @@
 
 ;;; ------------------------------------------------- date functions -------------------------------------------------
 
+(defn extract [unit expr] [[:extract [:raw (name unit) " FROM " [:cast expr :timestamptz]]]])
+(defn date-trunc [unit expr] [[:date_trunc (name unit) [:cast expr :timestamptz]]])
+
 ; If `expr` is a date, we need to cast it to a timestamp before we can truncate to a finer granularity
-(defmethod sql.qp/date [:firebolt :minute] [_ _ expr] [:date_trunc "minute" expr])
-(defmethod sql.qp/date [:firebolt :hour] [_ _ expr] [:date_trunc "hour" expr])
-(defmethod sql.qp/date [:firebolt :day] [_ _ expr] [:date_trunc "day" expr])
-(defmethod sql.qp/date [:firebolt :month] [_ _ expr] [:date_trunc "month" expr])
-(defmethod sql.qp/date [:firebolt :quarter] [_ _ expr] [:date_trunc "quarter" expr])
-(defmethod sql.qp/date [:firebolt :year] [_ _ expr] [:date_trunc "year" expr])
+(defmethod sql.qp/date [:firebolt :minute] [_ _ expr] (date-trunc "minute" expr))
+(defmethod sql.qp/date [:firebolt :hour] [_ _ expr](date-trunc "hour" expr))
+(defmethod sql.qp/date [:firebolt :day] [_ _ expr](date-trunc "day" expr))
+(defmethod sql.qp/date [:firebolt :month] [_ _ expr](date-trunc "month" expr))
+(defmethod sql.qp/date [:firebolt :quarter] [_ _ expr](date-trunc "quarter" expr))
+(defmethod sql.qp/date [:firebolt :year] [_ _ expr](date-trunc "year" expr))
 
 ; Extraction functions
-(defmethod sql.qp/date [:firebolt :minute-of-hour] [_ _ expr] [:extract :minute :from expr])
-(defmethod sql.qp/date [:firebolt :hour-of-day] [_ _ expr] [:extract :hour :from expr])
-(defmethod sql.qp/date [:firebolt :day-of-week]     [_ _ expr] [:extract :isodow :from expr])
-(defmethod sql.qp/date [:firebolt :day-of-month] [_ _ expr] [:extract :day :from expr])
-(defmethod sql.qp/date [:firebolt :day-of-year] [_ _ expr] [:extract :doy :from expr])
-(defmethod sql.qp/date [:firebolt :week-of-year]    [_ _ expr] [:extract :week :from expr])
-(defmethod sql.qp/date [:firebolt :month-of-year] [_ _ expr] [:extract :month :from expr])
-(defmethod sql.qp/date [:firebolt :quarter-of-year] [_ _ expr] [:extract :quarter :from expr])
+(defmethod sql.qp/date [:firebolt :minute-of-hour] [_ _ expr] (extract "minute" expr))
+(defmethod sql.qp/date [:firebolt :hour-of-day] [_ _ expr] (extract "hour" expr))
+(defmethod sql.qp/date [:firebolt :day-of-week]     [_ _ expr] (extract "isodow" expr))
+(defmethod sql.qp/date [:firebolt :day-of-month] [_ _ expr] (extract "day" expr))
+(defmethod sql.qp/date [:firebolt :day-of-year] [_ _ expr] (extract "doy" expr))
+(defmethod sql.qp/date [:firebolt :week-of-year]    [_ _ expr] (extract "week" expr))
+(defmethod sql.qp/date [:firebolt :month-of-year] [_ _ expr] (extract "month" expr))
+(defmethod sql.qp/date [:firebolt :quarter-of-year] [_ _ expr] (extract "quarter" expr))
 
 ; Set start of week to be monday
 (defmethod driver/db-start-of-week :firebolt
@@ -125,34 +129,34 @@
   :monday)
 
 ; Modify start of week to monday
-(defn- to-start-of-week [expr] [:date_trunc "week" expr])
+(defn- to-start-of-week [expr](extract "week" expr))
 (defmethod sql.qp/date [:firebolt :week] [driver _ expr] (sql.qp/adjust-start-of-week driver to-start-of-week expr))
 
 ; Return a appropriate HoneySQL form for converting a Unix timestamp integer field or value to an proper SQL Timestamp.
-(defmethod sql.qp/unix-timestamp->honeysql [:firebolt :seconds] [_ _ expr] (h2x/->datetime expr))
+(defmethod sql.qp/unix-timestamp->honeysql [:firebolt :seconds] [_ _ expr] [[:to_timestamp expr]])
 
 ; Return a HoneySQL form that performs represents addition of some temporal interval to the original `hsql-form'.
-(defmethod sql.qp/add-interval-honeysql-form :firebolt [_ dt amount unit] (h2x/+ dt [:raw (format "INTERVAL %d %s" (int amount) (name unit))]))
+(defmethod sql.qp/add-interval-honeysql-form :firebolt [_ dt amount unit] [[:date_add (name unit) (int amount) dt]])
 
 ; Format a temporal value `t` as a SQL-style literal string, converting time datatype to SQL-style literal string
 (defmethod unprepare/unprepare-value [:firebolt LocalTime]
   [_ t]
-  (format "'%s'" t))
+  (format "to_timestamp('%s', 'HH24:MI:SS')" t))
 
 ; Converting ZonedDateTime datatype to SQL-style literal string
 (defmethod unprepare/unprepare-value [:firebolt ZonedDateTime]
   [_ t]
-  (format "timestamptz '%s'" (u.date/format-sql (t/local-date-time t))))
+  (format "timestamptz '%s'" (u.date/format-sql (t/offset-date-time t))))
 
 ; Converting OffsetDateTime datatype to SQL-style literal string
 (defmethod unprepare/unprepare-value [:firebolt OffsetDateTime]
   [_ t]
-  (format "timestamptz '%s'" (u.date/format-sql (t/local-date-time t))))
+  (format "timestamptz '%s'" (u.date/format-sql (t/offset-date-time t))))
 
 ; Converting OffsetTime datatype to SQL-style literal string
 (defmethod unprepare/unprepare-value [:firebolt OffsetTime]
   [_ t]
-  (format "timestamptz '%s'" (u.date/format-sql (t/local-date-time t))))
+  (format "timestamptz '%s'" (u.date/format-sql (t/offset-date-time t))))
 
 (defmethod sql.qp/cast-temporal-string [:firebolt :Coercion/ISO8601->Time]
  [_driver _semantic_type expr]
