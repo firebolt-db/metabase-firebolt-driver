@@ -102,8 +102,8 @@
 
 ;;; ------------------------------------------------- date functions -------------------------------------------------
 
-(defn extract [unit expr] [[:extract [:raw (name unit) " FROM " [:cast expr :timestamptz]]]])
-(defn date-trunc [unit expr] [[:date_trunc (name unit) [:cast expr :timestamptz]]])
+(defn extract [unit expr] [[:extract [:raw unit " FROM " [:cast expr :timestamptz]]]])
+(defn date-trunc [unit expr] [[:date_trunc unit [:cast expr :timestamptz]]])
 
 ; If `expr` is a date, we need to cast it to a timestamp before we can truncate to a finer granularity
 (defmethod sql.qp/date [:firebolt :minute] [_ _ expr] (date-trunc "minute" expr))
