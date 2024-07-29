@@ -128,7 +128,7 @@
   :monday)
 
 ; Modify start of week to monday
-(defn- to-start-of-week [expr](extract "week" expr))
+(defn- to-start-of-week [expr](date-trunc "week" expr))
 (defmethod sql.qp/date [:firebolt :week] [driver _ expr] (sql.qp/adjust-start-of-week driver to-start-of-week expr))
 
 ; Return a appropriate HoneySQL form for converting a Unix timestamp integer field or value to an proper SQL Timestamp.
@@ -182,6 +182,7 @@
                       [:nest [:> [:STRPOS hsql-field hsql-value] 0]]
                       [:nest [:> [:STRPOS [:LOWER hsql-field] [:LOWER hsql-value]] 0]])))
 
+; escapes all regexp characters in a string, to be later used in a regexp_extract function
 (defn escape-regexp-sql [clause]
   [:REGEXP_REPLACE_ALL clause "([!$()*+.:<=>?[\\\\\\]^{|}-])" "\\\\\\\\\\\\1"])
 
