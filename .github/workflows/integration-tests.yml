@@ -4,66 +4,14 @@ on:
   workflow_dispatch:
 
 jobs:
-  run-integration-tests:
-    runs-on: ubuntu-latest
-    steps:
-      - name: "Checkout Metabase Code"
-        uses: actions/checkout@v2
-        with:
-          repository: metabase/metabase
-          ref: "v0.48.0"
+  run-integration-tests1:
+    uses: ./.github/workflows/integration-tests-v1.yml
+    secrets:
+      FIREBOLT_STG_USERNAME: ${{ secrets.FIREBOLT_STG_USERNAME }}
+      FIREBOLT_STG_PASSWORD: ${{ secrets.FIREBOLT_STG_PASSWORD }}
 
-      - name: Checkout firebolt connector code
-        uses: actions/checkout@v2
-        with:
-          path: modules/drivers/firebolt
-
-      - name: Prepare java
-        uses: actions/setup-java@v2
-        with:
-          distribution: 'zulu'
-          java-version: '17'
-
-      - name: Install clojure tools
-        uses: DeLaGuardo/setup-clojure@3.7
-        with:
-          # Install just one or all simultaneously
-          cli: '1.11.1.1155' # Clojure CLI based on tools.deps
-          lein: '2.9.10'     # or use 'latest' to always provision latest version of leiningen
-
-      - name: Add firebolt driver imports to metabase
-        shell: bash
-        run: |
-          sed --in-place '$ s/..$/\n  metabase\/firebolt           {:local\/root "firebolt"}}}/' modules/drivers/deps.edn
-          sed --in-place '/\s:drivers-dev/,+1 {/:extra-paths/,+1 {n;s/^\s*\["/\0modules\/drivers\/firebolt\/test"\n    "/ }}' deps.edn
-          sed --in-place '/\s:check/,+3 {/:main-opts/ {n;s/\("[^"]*"\)/\1\n                "modules\/drivers\/firebolt\/src"/}}' deps.edn
-          export NODE_OPTIONS=--openssl-legacy-provider
-          yarn build-static-viz
-
-      - name: "Build metabase"
-        shell: bash
-        run: |
-              clojure -X:deps prep
-              cd modules/drivers
-              clojure -X:deps prep
-              cd ../..
-
-      - name: Setup database and engine
-        id: setup
-        uses: firebolt-db/integration-testing-setup@v1
-        with:
-          firebolt-username: ${{ secrets.FIREBOLT_STG_USERNAME }}
-          firebolt-password: ${{ secrets.FIREBOLT_STG_PASSWORD }}
-          api-endpoint: "api.staging.firebolt.io"
-          region: "us-east-1"
-          instance-type: "M2"
-
-      - name: Run metabase integration tests
-        env:
-          DRIVERS: firebolt
-          MB_FIREBOLT_TEST_USER: ${{ secrets.FIREBOLT_STG_USERNAME }}
-          MB_FIREBOLT_TEST_PASSWORD: ${{ secrets.FIREBOLT_STG_PASSWORD }}
-          MB_FIREBOLT_TEST_DB: ${{ steps.setup.outputs.database_name }}
-          MB_FIREBOLT_TEST_ADDITIONAL_OPTIONS: engine=${{ steps.setup.outputs.engine_name }}&environment=staging
-        run: |
-          clojure -X:dev:drivers:drivers-dev:test
+  run-integration-tests2:
+    uses: ./.github/workflows/integration-tests-v2.yml
+    secrets:
+      FIREBOLT_CLIENT_ID_STG_NEW_IDN: ${{ secrets.FIREBOLT_CLIENT_ID_STG_NEW_IDN }}
+      FIREBOLT_CLIENT_SECRET_STG_NEW_IDN: ${{ secrets.FIREBOLT_CLIENT_SECRET_STG_NEW_IDN }}
