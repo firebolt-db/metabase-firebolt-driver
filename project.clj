@@ -1,11 +1,10 @@
 (def version "3.0.5")
-(def jdbc-version "3.1.0")
 
 (defproject metabase/firebolt-driver version
   :min-lein-version "3.0.0"
 
   :dependencies
-  [[io.firebolt/firebolt-jdbc jdbc-version]]
+  [[io.firebolt/firebolt-jdbc "3.1.0"]]
 
   :repositories [["snapshots" {:sign-releases false
                                :url "https://repo.repsy.io/mvn/firebolt/maven-snapshots"
