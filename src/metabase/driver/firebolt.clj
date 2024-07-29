@@ -21,7 +21,6 @@
              [date-2 :as u.date]
              [ssh :as ssh]]
              [metabase.util.honey-sql-2 :as h2x]
-
     [metabase.models
              [field :as field :refer [Field]]]
             [metabase.mbql.util :as mbql.u]
@@ -170,31 +169,43 @@
 (defmethod sql-jdbc.sync/active-tables :firebolt [& args]
   (apply sql-jdbc.sync/post-filtered-active-tables args))
 
-; De-parameterize the query and substitue values
-(defmethod driver/execute-reducible-query :firebolt
-  [driver {:keys [database settings], {sql :query, :keys [params], :as inner-query} :native, :as outer-query} context respond]
-  (let [inner-query (-> (assoc inner-query
-                               :remark (qputil/query->remark :firebolt outer-query)
-                               :query  (if (seq params)
-                                         (unprepare/unprepare driver (cons sql params))
-                                         sql)
-                               :max-rows (mbql.u/query->max-rows-limit outer-query))
-                        (dissoc :params))
-        query       (assoc outer-query :native inner-query)]
-    ((get-method driver/execute-reducible-query :sql-jdbc) driver query context respond)))
-
 ; call REGEXP_MATCHES function when regex-match-first is called
 (defmethod sql.qp/->honeysql [:firebolt :regex-match-first]
-           [driver [_ arg pattern]]
-           [:'extract (sql.qp/->honeysql driver arg) pattern])
+           [_ [_ arg pattern]]
+           [:REGEXP_LIKE (sql.qp/->honeysql :firebolt arg) pattern])
 
 (defmethod sql.qp/->honeysql [:firebolt :contains]
             [_ [_ field value options]]
             (let [hsql-field (sql.qp/->honeysql :firebolt field)
                   hsql-value (sql.qp/->honeysql :firebolt value)]
                     (if (get options :case-sensitive true)
-                           [:> [:STRPOS hsql-field hsql-value] 0]
-                           [:> [:STRPOS [:LOWER hsql-field] [:LOWER hsql-value]] 0])))
+                      [:nest [:> [:STRPOS hsql-field hsql-value] 0]]
+                      [:nest [:> [:STRPOS [:LOWER hsql-field] [:LOWER hsql-value]] 0]])))
+
+(defn escape-regexp-sql [clause]
+  [:REGEXP_REPLACE_ALL clause "([!$()*+.:<=>?[\\\\\\]^{|}-])" "\\\\\\\\\\\\1"])
+
+; Override starts-with and ends-with to use REGEXP_EXTRACT instead of LIKE,
+; since LIKE only supports constant strings as a pattern
+(defmethod sql.qp/->honeysql [:firebolt :starts-with]
+            [_ [_ field value options]]
+            (let [hsql-field (sql.qp/->honeysql :firebolt field)
+                  hsql-value (sql.qp/->honeysql :firebolt value)
+                  flags (if (get options :case-sensitive true) "" "i")]
+              [:is [:REGEXP_EXTRACT hsql-field [:|| "^" (escape-regexp-sql hsql-value)] flags] [:not nil]]))
+
+(defmethod sql.qp/->honeysql [:firebolt :ends-with]
+            [_ [_ field value options]]
+            (let [hsql-field (sql.qp/->honeysql :firebolt field)
+                  hsql-value (sql.qp/->honeysql :firebolt value)
+                  flags (if (get options :case-sensitive true) "" "i")]
+              [:is [:REGEXP_EXTRACT hsql-field [:|| (escape-regexp-sql hsql-value) "$"] flags] [:not nil]]))
+
+; Wrap between clause in parenthesis
+(defmethod sql.qp/->honeysql [:sql :between]
+  [_ [_ field min-val max-val]]
+  [:nest [:between (sql.qp/->honeysql :firebolt field) (sql.qp/->honeysql :firebolt min-val) (sql.qp/->honeysql :firebolt max-val)]])
+
 
 ;; ------- Methods to handle Views, Describe database to not return Agg and Join indexes in Firebolt ----------------
 ;; All the functions below belong to describe-table.clj which are all private in metabase and cant be called or
@@ -352,7 +363,3 @@
 (defmethod driver/database-supports? [:firebolt :set-timezone]  [_ _ _] false)
 
 (defmethod driver/database-supports? [:firebolt :nested-fields]  [_ _ _] false)
-
-
-
-

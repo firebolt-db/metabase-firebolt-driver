@@ -153,3 +153,5 @@
     (let [obj (.getObject rs i)]
       (if (= "NaN" (str obj)) nil obj))))
 
+(defmethod tx/sorts-nil-first? :firebolt [_ _] false)
+
