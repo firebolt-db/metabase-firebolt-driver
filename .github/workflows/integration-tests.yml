@@ -1,0 +1,17 @@
+name: Run integration tests
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run-integration-tests1:
+    uses: ./.github/workflows/integration-tests-v1.yml
+    secrets:
+      FIREBOLT_STG_USERNAME: ${{ secrets.FIREBOLT_STG_USERNAME }}
+      FIREBOLT_STG_PASSWORD: ${{ secrets.FIREBOLT_STG_PASSWORD }}
+
+  run-integration-tests2:
+    uses: ./.github/workflows/integration-tests-v2.yml
+    secrets:
+      FIREBOLT_CLIENT_ID_STG_NEW_IDN: ${{ secrets.FIREBOLT_CLIENT_ID_STG_NEW_IDN }}
+      FIREBOLT_CLIENT_SECRET_STG_NEW_IDN: ${{ secrets.FIREBOLT_CLIENT_SECRET_STG_NEW_IDN }}

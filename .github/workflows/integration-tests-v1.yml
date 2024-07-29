@@ -2,12 +2,12 @@ name: Run integration tests v1
 
 on:
   workflow_dispatch:
-    workflow_call:
-      secrets:
-        FIREBOLT_STG_USERNAME:
-          required: true
-        FIREBOLT_STG_PASSWORD:
-          required: true
+  workflow_call:
+    secrets:
+      FIREBOLT_STG_USERNAME:
+        required: true
+      FIREBOLT_STG_PASSWORD:
+        required: true
 
 jobs:
   run-integration-tests:

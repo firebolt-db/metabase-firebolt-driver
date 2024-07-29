@@ -60,7 +60,7 @@ jobs:
         with:
           firebolt-client-id: ${{ secrets.FIREBOLT_CLIENT_ID_STG_NEW_IDN }}
           firebolt-client-secret: ${{ secrets.FIREBOLT_CLIENT_SECRET_STG_NEW_IDN }}
-          account: ${{ inputs.account }}
+          account: ${{ vars.FIREBOLT_ACCOUNT }}
           api-endpoint: "api.staging.firebolt.io"
           instance-type: "M2"
 
@@ -70,7 +70,7 @@ jobs:
           MB_FIREBOLT_TEST_USER: ${{ secrets.FIREBOLT_CLIENT_ID_STG_NEW_IDN }}
           MB_FIREBOLT_TEST_PASSWORD: ${{ secrets.FIREBOLT_CLIENT_SECRET_STG_NEW_IDN }}
           MB_FIREBOLT_TEST_DB: ${{ steps.setup.outputs.database_name }}
-          MB_FIREBOLT_TEST_ADDITIONAL_OPTIONS: engine=${{ steps.setup.outputs.engine_name }}&environment=staging
+          MB_FIREBOLT_TEST_ADDITIONAL_OPTIONS: engine=${{ steps.setup.outputs.engine_name }}&environment=staging&account=${{ vars.FIREBOLT_ACCOUNT }}
         run: |
           clojure -X:dev:drivers:drivers-dev:test
 
