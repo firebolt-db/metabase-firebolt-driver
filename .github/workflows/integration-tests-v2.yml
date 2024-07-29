@@ -73,3 +73,14 @@ jobs:
           MB_FIREBOLT_TEST_ADDITIONAL_OPTIONS: engine=${{ steps.setup.outputs.engine_name }}&environment=staging
         run: |
           clojure -X:dev:drivers:drivers-dev:test
+
+      - name: Publish Test Report (JUnit)
+        uses: dorny/test-reporter@v1
+        if: failure()
+        with:
+          path: 'target/junit/**/*_test.xml'
+          name: JUnit Test Report ${{ inputs.junit-name }}
+          reporter: java-junit
+          list-suites: failed
+          list-tests: failed
+          fail-on-error: false
