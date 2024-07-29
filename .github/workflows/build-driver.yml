@@ -7,13 +7,18 @@ on:
         description: 'Metabase version'
         required: false
         type: string
-        default: 'v0.46.1'
+        default: 'v0.48.0'
   workflow_call:
     inputs:
       metabase-version:
         description: 'Metabase version'
         required: true
         type: string
+      branch:
+        description: 'Branch to build'
+        required: false
+        type: string
+        default: 'develop'
     outputs:
       jar-name:
         description: Firebolt Driver jar
@@ -30,6 +35,8 @@ jobs:
       version: ${{steps.get-version.outputs.version}}
     steps:
       - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.inputs.branch || 'develop' }}
       - name: "Download metabase"
         run: wget https://downloads.metabase.com/${{ inputs.metabase-version }}/metabase.jar
       - name: "Maven install"
