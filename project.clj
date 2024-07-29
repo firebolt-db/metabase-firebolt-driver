@@ -1,4 +1,4 @@
-(def version "3.0.4")
+(def version "3.0.5")
 (def jdbc-version "3.1.0")
 
 (defproject metabase/firebolt-driver version
