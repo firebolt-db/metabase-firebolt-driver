@@ -79,7 +79,7 @@ jobs:
         if: failure()
         with:
           path: 'target/junit/**/*_test.xml'
-          name: JUnit Test Report ${{ inputs.junit-name }}
+          name: Firebolt 2.0 Metabase driver JUnit Test Report
           reporter: java-junit
           list-suites: failed
           list-tests: failed
