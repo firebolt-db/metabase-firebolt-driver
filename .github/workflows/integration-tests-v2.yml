@@ -1,13 +1,13 @@
-name: Run integration tests v1
+name: Run integration tests v2
 
 on:
   workflow_dispatch:
-    workflow_call:
-      secrets:
-        FIREBOLT_STG_USERNAME:
-          required: true
-        FIREBOLT_STG_PASSWORD:
-          required: true
+  workflow_call:
+    secrets:
+      FIREBOLT_CLIENT_ID_STG_NEW_IDN:
+        required: true
+      FIREBOLT_CLIENT_SECRET_STG_NEW_IDN:
+        required: true
 
 jobs:
   run-integration-tests:
@@ -49,26 +49,26 @@ jobs:
       - name: "Build metabase"
         shell: bash
         run: |
-              clojure -X:deps prep
-              cd modules/drivers
-              clojure -X:deps prep
-              cd ../..
+          clojure -X:deps prep
+          cd modules/drivers
+          clojure -X:deps prep
+          cd ../..
 
       - name: Setup database and engine
         id: setup
-        uses: firebolt-db/integration-testing-setup@v1
+        uses: firebolt-db/integration-testing-setup@v2
         with:
-          firebolt-username: ${{ secrets.FIREBOLT_STG_USERNAME }}
-          firebolt-password: ${{ secrets.FIREBOLT_STG_PASSWORD }}
+          firebolt-client-id: ${{ secrets.FIREBOLT_CLIENT_ID_STG_NEW_IDN }}
+          firebolt-client-secret: ${{ secrets.FIREBOLT_CLIENT_SECRET_STG_NEW_IDN }}
+          account: ${{ inputs.account }}
           api-endpoint: "api.staging.firebolt.io"
-          region: "us-east-1"
           instance-type: "M2"
 
       - name: Run metabase integration tests
         env:
           DRIVERS: firebolt
-          MB_FIREBOLT_TEST_USER: ${{ secrets.FIREBOLT_STG_USERNAME }}
-          MB_FIREBOLT_TEST_PASSWORD: ${{ secrets.FIREBOLT_STG_PASSWORD }}
+          MB_FIREBOLT_TEST_USER: ${{ secrets.FIREBOLT_CLIENT_ID_STG_NEW_IDN }}
+          MB_FIREBOLT_TEST_PASSWORD: ${{ secrets.FIREBOLT_CLIENT_SECRET_STG_NEW_IDN }}
           MB_FIREBOLT_TEST_DB: ${{ steps.setup.outputs.database_name }}
           MB_FIREBOLT_TEST_ADDITIONAL_OPTIONS: engine=${{ steps.setup.outputs.engine_name }}&environment=staging
         run: |
