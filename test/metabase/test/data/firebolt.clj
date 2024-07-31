@@ -154,4 +154,5 @@
       (if (= "NaN" (str obj)) nil obj))))
 
 (defmethod tx/sorts-nil-first? :firebolt [_ _] false)
+(defmethod tx/supports-time-type? :firebolt [_driver] false)
 
