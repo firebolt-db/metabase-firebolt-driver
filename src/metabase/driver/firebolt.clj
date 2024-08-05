@@ -7,6 +7,7 @@
             [java-time.api :as t]
             [medley.core :as m]
             [metabase.driver :as driver]
+            [metabase.driver.common :as driver.common]
             [metabase.driver.sql-jdbc
              [common :as sql-jdbc.common]
              [connection :as sql-jdbc.conn]
@@ -21,7 +22,7 @@
              [date-2 :as u.date]
              [ssh :as ssh]]
              [metabase.util.honey-sql-2 :as h2x]
-    [metabase.models
+            [metabase.models
              [field :as field :refer [Field]]]
             [metabase.mbql.util :as mbql.u]
             [metabase.query-processor.util :as qputil])
@@ -118,7 +119,6 @@
 (defmethod sql.qp/date [:firebolt :day-of-week]     [_ _ expr] (extract "isodow" expr))
 (defmethod sql.qp/date [:firebolt :day-of-month] [_ _ expr] (extract "day" expr))
 (defmethod sql.qp/date [:firebolt :day-of-year] [_ _ expr] (extract "doy" expr))
-(defmethod sql.qp/date [:firebolt :week-of-year]    [_ _ expr] (extract "week" expr))
 (defmethod sql.qp/date [:firebolt :month-of-year] [_ _ expr] (extract "month" expr))
 (defmethod sql.qp/date [:firebolt :quarter-of-year] [_ _ expr] (extract "quarter" expr))
 
@@ -129,13 +129,26 @@
 
 ; Modify start of week to monday
 (defn- to-start-of-week [expr](date-trunc "week" expr))
+(defn- to-week-of-year [expr](extract "week" expr))
+
 (defmethod sql.qp/date [:firebolt :week] [driver _ expr] (sql.qp/adjust-start-of-week driver to-start-of-week expr))
+(defmethod sql.qp/date [:firebolt :week-of-year]
+  [driver _ expr]
+  (let [offset (driver.common/start-of-week-offset driver)]
+      (if (not= offset 0)
+          (to-week-of-year (sql.qp/add-interval-honeysql-form driver expr (- offset 7) :day))
+          (to-week-of-year expr)
+      )
+  )
+)
 
 ; Return a appropriate HoneySQL form for converting a Unix timestamp integer field or value to an proper SQL Timestamp.
 (defmethod sql.qp/unix-timestamp->honeysql [:firebolt :seconds] [_ _ expr] [[:to_timestamp expr]])
 
 ; Return a HoneySQL form that performs represents addition of some temporal interval to the original `hsql-form'.
-(defmethod sql.qp/add-interval-honeysql-form :firebolt [_ dt amount unit] [[:date_add (name unit) (int amount) dt]])
+(defmethod sql.qp/add-interval-honeysql-form :firebolt [_ dt amount unit]
+           [[:date_add (h2x/literal (name unit)) (int amount) [:cast dt :timestamptz]]]
+ )
 
 ; Format a temporal value `t` as a SQL-style literal string, converting time datatype to SQL-style literal string
 (defmethod unprepare/unprepare-value [:firebolt LocalTime]
@@ -203,7 +216,7 @@
               [:is [:REGEXP_EXTRACT hsql-field [:|| (escape-regexp-sql hsql-value) "$"] flags] [:not nil]]))
 
 ; Wrap between clause in parenthesis
-(defmethod sql.qp/->honeysql [:sql :between]
+(defmethod sql.qp/->honeysql [:firebolt :between]
   [_ [_ field min-val max-val]]
   [:nest [:between (sql.qp/->honeysql :firebolt field) (sql.qp/->honeysql :firebolt min-val) (sql.qp/->honeysql :firebolt max-val)]])
 
