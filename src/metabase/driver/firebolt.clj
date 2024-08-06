@@ -34,7 +34,7 @@
 ;;; ---------------------------------------------- sql-jdbc.connection -----------------------------------------------
 
 (defn parse-additional-options [query-string]
-      (let [pairs (clojure.string/split query-string #"&")
+      (let [pairs (clojure.string/split (or query-string "") #"&")
             kv-pairs (map #(clojure.string/split % #"=") pairs)]
            (into {} (map (fn [[k v]] [(keyword k) v]) kv-pairs))))
 
@@ -49,8 +49,9 @@
               :classname "com.firebolt.FireboltDriver",
               :subprotocol "firebolt",
               :subname (str "//api." env ".firebolt.io/" db),
-        }]
-    (-> (merge spec (select-keys details [:password :classname :user :additional-options :account :engine_name]))
+        }
+        ]
+    (-> (merge spec (select-keys details [:password :user :additional-options :account :engine_name]))
         (sql-jdbc.common/handle-additional-options  (select-keys details [:password :classname :subprotocol :user :subname :additional-options :account :engine_name]))
         )))
 

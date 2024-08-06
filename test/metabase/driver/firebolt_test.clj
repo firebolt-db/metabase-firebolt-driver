@@ -35,7 +35,7 @@
 ; TEST - Connection details specification
 (deftest connection-details->spec-test
   (let [expected-spec-default {:classname   "com.firebolt.FireboltDriver",
-                               :subname     "https://api.app.firebolt.io",
+                               :subname     "//api.app.firebolt.io/",
                                :subprotocol "firebolt"}]
     (doseq [
             [expected-spec details]
@@ -50,8 +50,8 @@
               {:additional-options ""}],
              [
               {
-               :classname   "custom.Class",
-               :subname     "https://api.dev.firebolt.io/mydb",
+               :classname   "com.firebolt.FireboltDriver",
+               :subname     "//api.dev.firebolt.io/mydb?environment=dev",
                :subprotocol "firebolt"
                :user        "myuser",
                :password    "mypassword",
@@ -59,20 +59,20 @@
                :engine_name "myengine"
                },
               {
-               :additional-options "env=dev",
+               :additional-options "environment=dev",
                :user               "myuser",
                :password           "mypassword",
                :account            "myaccount",
                :db                 "mydb",
                :engine_name        "myengine"
-               :classname          "custom.Class"
                }]
              ]
             ]
-      (let [actual-spec (sql-jdbc.conn/connection-details->spec :firebolt details)]
-        (is (= (dissoc expected-spec)
-               (dissoc actual-spec)))
-        ))))
+      (testing (pr-str details))
+        (let [actual-spec (sql-jdbc.conn/connection-details->spec :firebolt details)]
+          (is (= (dissoc expected-spec)
+                 (dissoc actual-spec)))
+          ))))
 
 ; TEST - connection
 (deftest can-connect-test
