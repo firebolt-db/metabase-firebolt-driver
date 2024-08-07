@@ -109,13 +109,8 @@
 
 ; Helper functions for date extraction
 (defn extract [unit expr] [[:extract [:raw unit " FROM " [:cast expr :timestamptz]]]])
-(defn adjusted-start-of-week-extract [unit expr]
-
-    )
 ; Helper functions for date truncation
 (defn date-trunc [unit expr] [[:date_trunc (h2x/literal unit) [:cast expr :timestamptz]]])
-(defn adjusted-start-of-week-date-trunc [unit expr]
-  )
 
 ; If `expr` is a date, we need to cast it to a timestamp before we can truncate to a finer granularity
 (defmethod sql.qp/date [:firebolt :minute] [_ _ expr] (date-trunc "minute" expr))
