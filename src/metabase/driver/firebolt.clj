@@ -189,7 +189,7 @@
 
 ; escapes all regexp characters in a string, to be later used in a regexp_extract function
 (defn escape-regexp-sql [clause]
-  [:REGEXP_REPLACE_ALL clause "([!$()*+.:<=>?[\\\\\\]^{|}-])" "\\\\\\\\\\\\1"])
+  [:REGEXP_REPLACE_ALL clause "([!$()*+.:<=>??[\\\\\\]^{|}-])" "\\\\\\\\\\\\1"])
 
 ; Override starts-with and ends-with to use REGEXP_EXTRACT instead of LIKE,
 ; since LIKE only supports constant strings as a pattern
