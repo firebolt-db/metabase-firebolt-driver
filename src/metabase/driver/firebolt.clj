@@ -7,6 +7,7 @@
             [java-time.api :as t]
             [medley.core :as m]
             [metabase.driver :as driver]
+            [metabase.driver.common :as driver.common]
             [metabase.driver.sql-jdbc
              [common :as sql-jdbc.common]
              [connection :as sql-jdbc.conn]
@@ -106,8 +107,15 @@
 
 ;;; ------------------------------------------------- date functions -------------------------------------------------
 
+; Set start of week to be monday
+(defmethod driver/db-start-of-week :firebolt
+  [_]
+  :monday)
+
+; Helper functions for date extraction
 (defn extract [unit expr] [[:extract [:raw unit " FROM " [:cast expr :timestamptz]]]])
-(defn date-trunc [unit expr] [[:date_trunc [:raw "'" unit "'"] [:cast expr :timestamptz]]])
+; Helper functions for date truncation
+(defn date-trunc [unit expr] [[:date_trunc (h2x/literal unit) [:cast expr :timestamptz]]])
 
 ; If `expr` is a date, we need to cast it to a timestamp before we can truncate to a finer granularity
 (defmethod sql.qp/date [:firebolt :minute] [_ _ expr] (date-trunc "minute" expr))
@@ -116,25 +124,28 @@
 (defmethod sql.qp/date [:firebolt :month] [_ _ expr](date-trunc "month" expr))
 (defmethod sql.qp/date [:firebolt :quarter] [_ _ expr](date-trunc "quarter" expr))
 (defmethod sql.qp/date [:firebolt :year] [_ _ expr](date-trunc "year" expr))
+; account for start of week setting in the :week implementation
+(defmethod sql.qp/date [:firebolt :week] [_ _ expr]
+  (sql.qp/adjust-start-of-week :firebolt #(date-trunc "week" %) expr))
 
 ; Extraction functions
+(defmethod sql.qp/date [:firebolt :second-of-minute] [_ _ expr] (extract "second" expr))
 (defmethod sql.qp/date [:firebolt :minute-of-hour] [_ _ expr] (extract "minute" expr))
 (defmethod sql.qp/date [:firebolt :hour-of-day] [_ _ expr] (extract "hour" expr))
-(defmethod sql.qp/date [:firebolt :day-of-week]     [_ _ expr] (extract "isodow" expr))
 (defmethod sql.qp/date [:firebolt :day-of-month] [_ _ expr] (extract "day" expr))
 (defmethod sql.qp/date [:firebolt :day-of-year] [_ _ expr] (extract "doy" expr))
-(defmethod sql.qp/date [:firebolt :week-of-year]    [_ _ expr] (extract "week" expr))
+(defmethod sql.qp/date [:firebolt :week-of-year-iso]    [_ _ expr] (extract "week" expr))
 (defmethod sql.qp/date [:firebolt :month-of-year] [_ _ expr] (extract "month" expr))
 (defmethod sql.qp/date [:firebolt :quarter-of-year] [_ _ expr] (extract "quarter" expr))
-
-; Set start of week to be monday
-(defmethod driver/db-start-of-week :firebolt
-  [_]
-  :monday)
-
-; Modify start of week to monday
-(defn- to-start-of-week [expr](date-trunc "week" expr))
-(defmethod sql.qp/date [:firebolt :week] [driver _ expr] (sql.qp/adjust-start-of-week driver to-start-of-week expr))
+(defmethod sql.qp/date [:firebolt :year-of-era] [_ _ expr] (extract "year" expr))
+; account for start of week setting in the :day-of-week implementation
+(defmethod sql.qp/date [:firebolt :day-of-week] [_ _ expr]
+  (let [offset (driver.common/start-of-week-offset :firebolt)]
+    (if (not= offset 0)
+      (extract "isodow" (sql.qp/add-interval-honeysql-form :firebolt expr (- offset 7) :day))
+      (extract "isodow" expr)
+      )
+    ))
 
 ; Return a appropriate HoneySQL form for converting a Unix timestamp integer field or value to an proper SQL Timestamp.
 (defmethod sql.qp/unix-timestamp->honeysql [:firebolt :seconds] [_ _ expr] [[:to_timestamp expr]])
