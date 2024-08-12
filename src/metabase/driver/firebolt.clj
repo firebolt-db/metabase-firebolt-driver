@@ -34,7 +34,7 @@
 ;;; ---------------------------------------------- sql-jdbc.connection -----------------------------------------------
 
 (defn parse-additional-options [query-string]
-      (let [pairs (clojure.string/split query-string #"&")
+      (let [pairs (clojure.string/split (or query-string "") #"&")
             kv-pairs (map #(clojure.string/split % #"=") pairs)]
            (into {} (map (fn [[k v]] [(keyword k) v]) kv-pairs))))
 
@@ -45,9 +45,14 @@
       :as   details}]
   (let [
         env (System/getProperty "env" (get (parse-additional-options (get details :additional-options "")) :environment "app"))
-        spec {:classname "com.firebolt.FireboltDriver", :subprotocol "firebolt", :subname (str "//api." env ".firebolt.io/" db), :ssl true}]
-    (-> (merge spec (select-keys details [:password :classname :subprotocol :user :subname :additional-options :account :engine_name :env]))
-        (sql-jdbc.common/handle-additional-options  (select-keys details [:password :classname :subprotocol :user :subname :additional-options :account :engine_name :env]))
+        spec {
+              :classname "com.firebolt.FireboltDriver",
+              :subprotocol "firebolt",
+              :subname (str "//api." env ".firebolt.io/" db),
+        }
+        ]
+    (-> (merge spec (select-keys details [:password :user :additional-options :account :engine_name]))
+        (sql-jdbc.common/handle-additional-options  (select-keys details [:password :classname :subprotocol :user :subname :additional-options :account :engine_name]))
         )))
 
 ; Testing the firebolt database connection
