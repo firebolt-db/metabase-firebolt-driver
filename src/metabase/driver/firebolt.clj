@@ -364,3 +364,7 @@
 (defmethod driver/database-supports? [:firebolt :set-timezone]  [_ _ _] false)
 
 (defmethod driver/database-supports? [:firebolt :nested-fields]  [_ _ _] false)
+
+(defmethod driver/database-supports? [:firebolt :advanced-math-expressions]  [_ _ _] false)
+
+(defmethod driver/database-supports? [:firebolt :percentile-aggregations]  [_ _ _] false)
