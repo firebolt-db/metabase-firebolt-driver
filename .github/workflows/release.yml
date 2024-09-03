@@ -25,7 +25,7 @@ jobs:
     needs: [build-driver]
     steps:
       - name: Download jar file
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4.1.7
         with:
           name: ${{ needs.build-driver.outputs.jar-name }}
       - uses: xresloader/upload-to-github-release@v1
