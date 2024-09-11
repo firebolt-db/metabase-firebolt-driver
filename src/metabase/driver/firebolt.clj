@@ -235,8 +235,8 @@
   (let [table-name (get table :name)
         schema (get table :schema)
         sql-query (if (nil? db-name-or-nil)
-                     "SELECT primary-index FROM information_schema.tables WHERE table_name = ?"
-                     "SELECT primary-index FROM information_schema.tables WHERE table_name = ? AND table_catalog = ?"
+                     "SELECT primary_index FROM information_schema.tables WHERE table_name = ?"
+                     "SELECT primary_index FROM information_schema.tables WHERE table_name = ? AND table_catalog = ?"
                   )
         sql-params (if (nil? db-name-or-nil)
                           [table-name]
