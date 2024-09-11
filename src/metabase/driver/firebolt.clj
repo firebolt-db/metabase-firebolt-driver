@@ -336,26 +336,27 @@
                      {:semantic-type semantic-type}))))
    (fields-metadata driver conn table db-name-or-nil)))
 
-(defn add-table-pks
-  "Using `metadata` find any primary keys for `table` and assoc `:pk?` to true for those columns."
-  [^DatabaseMetaData metadata table]
-  (let [pks (into #{} (common/reducible-results #(.getPrimaryKeys metadata nil nil (:name table))
-                                                (fn [^ResultSet rs]
-                                                  #(.getString rs "COLUMN_NAME"))))]
-    (update table :fields (fn [fields]
-                            (set (for [field fields]
-                                   (if-not (contains? pks (:name field))
-                                     field
-                                     (assoc field :pk? true))))))))
-
-(defmethod driver/describe-table :firebolt
-  [driver database table]
-  (let [spec (sql-jdbc.conn/db->pooled-connection-spec database)]
-    (with-open [conn (jdbc/get-connection spec)]
-      (->> (assoc (select-keys table [:name :schema])
-                  :fields (describe-table-fields driver conn table nil))
-           ;; find PKs and mark them
-           (add-table-pks (.getMetaData conn))))))
+(defmethod get-table-pks :firebolt
+  [_ ^Connection conn db-name-or-nil table]
+  (let [table-name (get table :name)
+        schema (get table :schema)
+        sql-query (if (nil? db-name-or-nil)
+                          (str "SELECT primary-index FROM information_schema.tables WHERE table_name = ? AND table_schema = ?")
+                          (str "SELECT primary-index FROM information_schema.tables WHERE table_name = ? AND table_schema = ? AND table_catalog = ?")
+                          )
+        sql-params (if (nil? db-name-or-nil)
+                          [table-name schema]
+                          [table-name schema db-name-or-nil]
+                          )
+        pk-result (jdbc/query {:connection conn}
+                               concat ([sql-query] sql-params))
+        ]
+    (->> pk-result
+         first                                              ;; get the first row
+         :primary-index                                     ;; get the primary-index column
+         (str/split ",")                                    ;; split the primary-index column
+         (map str/trim)                                     ;; trim the column names
+         (vec))))                                           ;; convert to vector
 
 ;-------------------------Supported features---------------------------
 
