@@ -1,4 +1,4 @@
-/(ns metabase.driver.firebolt
+(ns metabase.driver.firebolt
   (:require [clojure
              [string :as str]
              [set :as set]]
@@ -6,6 +6,7 @@
             [java-time.api :as t]
             [metabase.driver :as driver]
             [metabase.driver.common :as driver.common]
+            [metabase.driver.sql-jdbc.sync.describe-table :as sql-jdbc.describe-table]
             [metabase.driver.sql-jdbc
              [common :as sql-jdbc.common]
              [connection :as sql-jdbc.conn]
@@ -229,20 +230,20 @@
       (set(for [{:keys [database table_name]} (jdbc/query {:connection conn} ["SELECT table_name from information_schema.views WHERE table_schema LIKE 'public'"])]
             {:name table_name :schema (when (seq database) database)}))))})
 
-(defmethod driver/get-table-pks :firebolt
+(defmethod sql-jdbc.describe-table/get-table-pks :firebolt
   [_ ^Connection conn db-name-or-nil table]
   (let [table-name (get table :name)
         schema (get table :schema)
         sql-query (if (nil? db-name-or-nil)
-                          (str "SELECT primary-index FROM information_schema.tables WHERE table_name = ? AND table_schema = ?")
-                          (str "SELECT primary-index FROM information_schema.tables WHERE table_name = ? AND table_schema = ? AND table_catalog = ?")
-                          )
+                     "SELECT primary-index FROM information_schema.tables WHERE table_name = ?"
+                     "SELECT primary-index FROM information_schema.tables WHERE table_name = ? AND table_catalog = ?"
+                  )
         sql-params (if (nil? db-name-or-nil)
-                          [table-name schema]
-                          [table-name schema db-name-or-nil]
+                          [table-name]
+                          [table-name db-name-or-nil]
                           )
         pk-result (jdbc/query {:connection conn}
-                               concat ([sql-query] sql-params))
+                              (concat [sql-query] sql-params))
         ]
     (->> pk-result
          first                                              ;; get the first row
