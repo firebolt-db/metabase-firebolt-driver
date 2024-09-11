@@ -3,30 +3,21 @@
              [string :as str]
              [set :as set]]
             [clojure.java.jdbc :as jdbc]
-            [clojure.tools.logging  :as log]
             [java-time.api :as t]
-            [medley.core :as m]
             [metabase.driver :as driver]
             [metabase.driver.common :as driver.common]
             [metabase.driver.sql-jdbc
              [common :as sql-jdbc.common]
              [connection :as sql-jdbc.conn]
              [sync :as sql-jdbc.sync]]
-            [metabase.driver.sql-jdbc.sync.interface :as i]
-            [metabase.driver.sql-jdbc.sync.common :as common]
             [metabase.driver.sql-jdbc.execute.legacy-impl :as legacy]
             [metabase.driver.sql.util.unprepare :as unprepare]
             [metabase.driver.sql.query-processor :as sql.qp]
-            [metabase.util :as u]
             [metabase.util
              [date-2 :as u.date]
              [ssh :as ssh]]
-             [metabase.util.honey-sql-2 :as h2x]
-    [metabase.models
-             [field :as field :refer [Field]]]
-            [metabase.mbql.util :as mbql.u]
-            [metabase.query-processor.util :as qputil])
-  (:import [java.sql DatabaseMetaData Types Connection ResultSet]
+             [metabase.util.honey-sql-2 :as h2x])
+  (:import [java.sql Types Connection ResultSet]
            [java.time LocalTime OffsetDateTime OffsetTime ZonedDateTime]))
 
 ; Firebolt driver registration
@@ -238,105 +229,7 @@
       (set(for [{:keys [database table_name]} (jdbc/query {:connection conn} ["SELECT table_name from information_schema.views WHERE table_schema LIKE 'public'"])]
             {:name table_name :schema (when (seq database) database)}))))})
 
-(defn- database-type->base-type-or-warn
-  "Given a `database-type` (e.g. `VARCHAR`) return the mapped Metabase type (e.g. `:type/Text`)."
-  [driver database-type]
-  (or (i/database-type->base-type driver (keyword database-type))
-      (do (log/warn (format "Don't know how to map column type '%s' to a Field base_type, falling back to :type/*."
-                            database-type))
-        :type/*)))
-
-(defn- calculated-semantic-type
-  "Get an appropriate semantic type for a column with `column-name` of type `database-type`."
-  [driver ^String column-name ^String database-type]
-  (when-let [semantic-type (i/column->semantic-type driver database-type column-name)]
-    (assert (isa? semantic-type :type/*)
-            (str "Invalid type: " semantic-type))
-    semantic-type))
-
-(defn- fallback-fields-metadata-from-select-query
-  "In some rare cases `:column_name` is blank (eg. SQLite's views with group by) fallback to sniffing the type from a
-  SELECT * query."
-  [driver ^Connection conn table-schema table-name]
-  ;; some DBs (:sqlite) don't actually return the correct metadata for LIMIT 0 queries
-  (let [[sql & params] (i/fallback-metadata-query driver table-schema nil table-name)]
-    (reify clojure.lang.IReduceInit
-      (reduce [_ rf init]
-        (with-open [stmt (common/prepare-statement driver conn sql params)
-                    rs   (.executeQuery stmt)]
-          (let [metadata (.getMetaData rs)]
-            (reduce
-             ((map (fn [^Integer i]
-                     {:name          (.getColumnName metadata i)
-                      :database-type (.getColumnTypeName metadata i)})) rf)
-             init
-             (range 1 (inc (.getColumnCount metadata))))))))))
-
-(defn- jdbc-fields-metadata
-  "Reducible metadata about the Fields belonging to a Table, fetching using JDBC DatabaseMetaData methods."
-  [driver ^Connection conn db-name-or-nil schema table-name]
-  (common/reducible-results #(.getColumns (.getMetaData conn)
-                                          db-name-or-nil
-                                          (some->> schema (driver/escape-entity-name-for-metadata driver))
-                                          (some->> table-name (driver/escape-entity-name-for-metadata driver))
-                                          nil)
-                            (fn [^ResultSet rs]
-                              #(merge
-                                {:name          (.getString rs "COLUMN_NAME")
-                                 :database-type (.getString rs "TYPE_NAME")}
-                                (when-let [remarks (.getString rs "REMARKS")]
-                                  (when-not (str/blank? remarks)
-                                    {:field-comment remarks}))))))
-
-(defn- fields-metadata
-  "Returns reducible metadata for the Fields in a `table`."
-  [driver ^Connection conn {schema :schema, table-name :name} & [^String db-name-or-nil]]
-  {:pre [(instance? Connection conn) (string? table-name)]}
-  (reify clojure.lang.IReduceInit
-    (reduce [_ rf init]
-      ;; 1. Return all the Fields that come back from DatabaseMetaData that include type info.
-      ;;
-      ;; 2. Iff there are some Fields that don't have type info, concatenate
-      ;;    `fallback-fields-metadata-from-select-query`, which fetches the same Fields using a different method.
-      ;;
-      ;; 3. Filter out any duplicates between the two methods using `m/distinct-by`.
-      (let [has-fields-without-type-info? (volatile! true)
-            jdbc-metadata                 (eduction
-                                           (remove (fn [{:keys [database-type]}]
-                                                     (when (str/blank? database-type)
-                                                       (vreset! has-fields-without-type-info? true)
-                                                       true)))
-                                           (jdbc-fields-metadata driver conn db-name-or-nil schema table-name))
-            fallback-metadata             (reify clojure.lang.IReduceInit
-                                            (reduce [_ rf init]
-                                              (reduce
-                                               rf
-                                               init
-                                               (when @has-fields-without-type-info?
-                                                 (fallback-fields-metadata-from-select-query driver conn schema table-name)))))]
-        ;; VERY IMPORTANT! DO NOT REWRITE THIS TO BE LAZY! IT ONLY WORKS BECAUSE AS NORMAL-FIELDS GETS REDUCED,
-        ;; HAS-FIELDS-WITHOUT-TYPE-INFO? WILL GET SET TO TRUE IF APPLICABLE AND THEN FALLBACK-FIELDS WILL RUN WHEN
-        ;; IT'S TIME TO START EVALUATING THAT.
-        (reduce
-         ((comp cat (m/distinct-by :name)) rf)
-         init
-         [jdbc-metadata fallback-metadata])))))
-
-(defn describe-table-fields
-  "Returns a set of column metadata for `table` using JDBC Connection `conn`."
-  [driver conn table & [db-name-or-nil]]
-  (into
-   #{}
-   (map-indexed (fn [i {:keys [database-type], column-name :name, :as col}]
-                  (merge
-                   (u/select-non-nil-keys col [:name :database-type :field-comment])
-                   {:base-type         (database-type->base-type-or-warn driver database-type)
-                    :database-position i}
-                   (when-let [semantic-type (calculated-semantic-type driver column-name database-type)]
-                     {:semantic-type semantic-type}))))
-   (fields-metadata driver conn table db-name-or-nil)))
-
-(defmethod get-table-pks :firebolt
+(defmethod driver/get-table-pks :firebolt
   [_ ^Connection conn db-name-or-nil table]
   (let [table-name (get table :name)
         schema (get table :schema)
