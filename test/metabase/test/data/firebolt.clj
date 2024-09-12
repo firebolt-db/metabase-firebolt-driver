@@ -54,16 +54,14 @@
 
 ;;; ----------------------------------------------- Query handling -----------------------------------------------
 
-; Implement this because the tests try to add a table with a hyphen and Firebolt doesn't support that
-(defmethod ddl.i/format-name :firebolt
-  [_ s]
-  (clojure.string/replace (format "%s" s) #"-" "_"))
+(defn make-table-name [db-name table-name]
+  (apply str (take-last 30 (str db-name "_" table-name))))
 
 ; Return a vector of String names that can be used to refer to a Database, Table, or Field
 (defmethod sql.tx/qualified-name-components :firebolt
   ([_ db-name]                       [db-name])
-  ([_ db-name table-name]            [(apply str (take-last 30 (str db-name "_" table-name)))])
-  ([_ db-name table-name field-name] [table-name field-name]))
+  ([_ db-name table-name]            [(make-table-name db-name table-name)])
+  ([_ db-name table-name field-name] [(make-table-name db-name table-name) field-name]))
 
 ; firebolt can only execute one statement at a time
 (defmethod execute/execute-sql! :firebolt [& args]
@@ -104,18 +102,6 @@
 ; loads data by adding ids
 (defmethod load-data/load-data! :firebolt [& args]
   (apply load-data/load-data-add-ids! args))
-
-; The firebolt JDBC driver doesn't support parameterized queries.So go ahead and deparameterize all the statements for now.
-(defmethod ddl/insert-rows-ddl-statements :firebolt
-  [driver table-identifier row-or-rows]
-  (for [sql+args ((get-method ddl/insert-rows-ddl-statements :sql-jdbc/test-extensions) driver table-identifier row-or-rows)]
-    (unprepare/unprepare driver sql+args)))
-
-; create a fresh connection from the DriverManager
-(defn- jdbc-spec->connection
-  ^Connection [jdbc-spec]
-  (DriverManager/getConnection (format "jdbc:%s:%s" (:subprotocol jdbc-spec) (:subname jdbc-spec))
-                               (connection-pool/map->properties (select-keys jdbc-spec [:user :password]))))
 
 ; by default, firebolt allows to run a query of 50000 characters.
 ; So setting the max_ast_elements flag to huge number to make the bulk insert queries work
