@@ -234,23 +234,23 @@
   [_ ^Connection conn db-name-or-nil table]
   (let [table-name (get table :name)
         schema (get table :schema)
-        sql-query (if (nil? db-name-or-nil)
-                     "SELECT primary_index FROM information_schema.tables WHERE table_name = ?"
-                     "SELECT primary_index FROM information_schema.tables WHERE table_name = ? AND table_catalog = ?"
-                  )
-        sql-params (if (nil? db-name-or-nil)
-                          [table-name]
-                          [table-name db-name-or-nil]
-                          )
+        base-sql "SELECT primary_index FROM information_schema.tables WHERE table_name = ?"
+        base-params [table-name]
+        sql (cond-> base-sql
+              schema (str " AND table_schema = ?")
+              db-name-or-nil (str " AND table_catalog = ?")
+        )
+        params (cond-> base-params
+                 schema (conj schema)
+                 db-name-or-nil (conj db-name-or-nil)
+        )
         pk-result (jdbc/query {:connection conn}
-                              (concat [sql-query] sql-params))
+                              (concat [sql] params))
+        pks ((first pk-result) :primary-index)
         ]
-    (->> pk-result
-         first                                              ;; get the first row
-         :primary-index                                     ;; get the primary-index column
-         (str/split ",")                                    ;; split the primary-index column
-         (map str/trim)                                     ;; trim the column names
-         (vec))))                                           ;; convert to vector
+    (if (nil? pks) [] (vec (map str/trim (str/split pks ","))))
+    )
+  )
 
 ;-------------------------Supported features---------------------------
 
