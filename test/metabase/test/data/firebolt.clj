@@ -53,6 +53,11 @@
   (defmethod sql.tx/field-base-type->sql-type [:firebolt base-type] [_ _] sql-type))
 
 ;;; ----------------------------------------------- Query handling -----------------------------------------------
+;; use underscore instead of hyphen in table names everywhere since it's internally inconsistent in Metabase
+(defmethod ddl.i/format-name :firebolt
+  [_ s]
+  (clojure.string/replace (format "%s" s) #"-" "_"))
+
 
 (defn make-table-name [db-name table-name]
   (apply str (take-last 30 (str db-name "_" table-name))))
