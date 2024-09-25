@@ -260,7 +260,7 @@
 
 (defmethod driver/database-supports? [:firebolt :percentile-aggregations]  [_ _ _] true)
 
-(defmethod driver/database-supports? [:firebolt :foreign-keys]  [_ _ _] true)
+(defmethod driver/database-supports? [:firebolt :foreign-keys]  [_ _ _] false)
 
 (defmethod driver/database-supports? [:firebolt :binning]  [_ _ _] true)
 
