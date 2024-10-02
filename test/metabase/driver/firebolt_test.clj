@@ -15,22 +15,15 @@
             [metabase.test.data.interface :as tx]
             [metabase.test.data.dataset-definitions :as dataset-defs]
             [clojure.string :as str]
-            [metabase.driver.common :as driver.common]
             [metabase.driver.sql.util.unprepare :as unprepare]
             [metabase
-             [models :refer [Table]]
+             [models :refer [Table, Database]]
              [sync :as sync]
              [util :as u]]
             [clojure.java.jdbc :as jdbc]
-            [metabase.models
-             [database :refer [Database]]]
-            [metabase.query-processor.store :as qp.store]
-            [metabase.lib.test-util :as lib.tu]
-            [honey.sql :as sql]
-            [honey.sql.helpers :as helpers]
+            [toucan2.core :as t2]
     )
-  (:import [java.sql DatabaseMetaData Types Connection ResultSet]
-           [java.time LocalTime OffsetDateTime OffsetTime ZonedDateTime]))
+  (:import [java.time LocalTime ZonedDateTime]))
 
 ; TEST - Connection details specification
 (deftest connection-details->spec-test
@@ -227,28 +220,18 @@
 
 (deftest describe-database-views-test
   (mt/test-driver :firebolt
-    (testing "describe-database views"
-    (let [details (mt/dbdef->connection-details :firebolt :db {:database-name  (tx/db-test-env-var-or-throw :firebolt :db)})
-          spec    (sql-jdbc.conn/connection-details->spec :firebolt details)]
-    ;; create the DB object
-         (qp.store/with-metadata-provider (lib.tu/mock-metadata-provider
-               {:databases [{:engine :firebolt
-                             :details (assoc details :db (tx/db-test-env-var-or-throw :firebolt :db))}]})
-                  (let [database (first (:databases (lib.tu/mock-metadata-provider
-                                                      {:databases [{:engine :firebolt
-                                                                    :details (assoc details :db (tx/db-test-env-var-or-throw :firebolt :db))}]})))
-                        sync! #(sync/sync-database! database)]
-                  ;; create a view
-                  (jdbc/execute! spec ["DROP VIEW IF EXISTS \"example_view\""])
-                  (jdbc/execute! spec ["CREATE VIEW \"example_view\" AS SELECT 'hello world' AS \"name\""])
-                  ;; now sync the DB
-                  (sync!)
-                  ;; now take a look at the Tables in the database, there should be an entry for the view
-                  (is (= [{:name "example_view"}]
-                         (filter (fn [row] (= "example_view" (:name row)))
-                                 (map (partial into {})
-                                      (jdbc/execute! spec
-                                                     (-> (helpers/select :name)
-                                                         (helpers/from :Table)
-                                                         (helpers/where [:= :db_id (u/the-id database)])
-                                                         sql/format))))))))))))
+                  (testing "describe-database views"
+                    (let [details (mt/dbdef->connection-details :firebolt :db {:database-name  (tx/db-test-env-var-or-throw :firebolt :db)})
+                          spec    (sql-jdbc.conn/connection-details->spec :firebolt details)]
+                      ;; create the DB object
+                      (mt/with-temp [Database database {:engine :firebolt, :details (assoc details :db (tx/db-test-env-var-or-throw :firebolt :db))}]
+                                    (let [sync! #(sync/sync-database! database)]
+                                      ;; create a view
+                                      (jdbc/execute! spec ["DROP VIEW IF EXISTS \"example_view\""])
+                                      (jdbc/execute! spec ["CREATE VIEW \"example_view\" AS SELECT 'hello world' AS \"name\""])
+                                      ;; now sync the DB
+                                      (sync!)
+                                      ;; now take a look at the Tables in the database, there should be an entry for the view
+                                      (is (= [{:name "example_view"}]
+                                             (filter (has-value :name "example_view") (map (partial into {})
+                                                                                           (t2/select :conn spec [Table :name] :db_id (u/the-id database))))))))))))
