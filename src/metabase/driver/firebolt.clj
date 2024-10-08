@@ -73,6 +73,7 @@
     :int           :type/Integer
     :numeric       :type/Decimal
     :real          :type/Float
+    (keyword "double precision") :type/Float
     :text          :type/Text
     :timestamp     :type/DateTime
     :timestamptz   :type/DateTimeWithLocalTZ
