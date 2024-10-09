@@ -22,6 +22,7 @@
              [util :as u]]
             [clojure.java.jdbc :as jdbc]
             [toucan2.core :as t2]
+            [honeysql.core :as hsql]
     )
   (:import [java.time LocalTime ZonedDateTime]))
 
@@ -128,8 +129,8 @@
          (sql.qp/date :firebolt :day-of-month "2021-06-06 12:12:12")))
   (is (= [[:extract [:raw "doy" " FROM " [:cast "2021-06-06 12:12:12" :timestamptz]]]]
          (sql.qp/date :firebolt :day-of-year "2021-06-06 12:12:12")))
-  (is (= (honeysql.core/call :ceil
-           (honeysql.core/call :/
+  (is (= (hsql/call :ceil
+           (hsql/call :/
              [[:extract [:raw "doy" " FROM " [:cast
                  [[:date_add "day" -1
                    [[:date_trunc [:metabase.util.honey-sql-2/literal "week"]
