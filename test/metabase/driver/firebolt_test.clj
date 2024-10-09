@@ -85,7 +85,6 @@
                         :bigint        :type/BigInteger
                         :integer       :type/Integer
                         :string        :type/Text
-                        :bit           :type/*
                         :bool          :type/Boolean
                         :boolean       :type/Boolean
                         :bytea         :type/*    ; byte array
@@ -94,8 +93,8 @@
                         :int           :type/Integer
                         :numeric       :type/Decimal
                         :real          :type/Float
+                        (keyword "double precision")    :type/Float
                         :text          :type/Text
-                        :time          :type/Time
                         :timestamp     :type/DateTime
                         :timestamptz   :type/DateTimeWithLocalTZ
                         :varchar       :type/Text
@@ -104,40 +103,47 @@
 
 ; TEST - truncating date functions
 (deftest date-functions-test
-  (is (= [:date_trunc (hx/literal "minute") (hx/with-type-info [:cast "2021-06-06 12:12:12" [:raw "timestamp"]] #:hx{:database-type "timestamp"})]
+  (is (= [[:date_trunc (hx/literal "minute") [:cast "2021-06-06 12:12:12" :timestamptz]]]
          (sql.qp/date :firebolt :minute "2021-06-06 12:12:12")))
-  (is (= [:date_trunc (hx/literal "hour") (hx/with-type-info [:cast "2021-06-06 12:12:12" [:raw "timestamp"]] #:hx{:database-type "timestamp"})]
+  (is (= [[:date_trunc (hx/literal "hour") [:cast "2021-06-06 12:12:12" :timestamptz]]]
          (sql.qp/date :firebolt :hour "2021-06-06 12:12:12")))
-  (is (= [:date_trunc (hx/literal "day") "2021-06-06 12:12:12"]
+  (is (= [[:date_trunc (hx/literal "day") [:cast "2021-06-06 12:12:12" :timestamptz]]]
          (sql.qp/date :firebolt :day "2021-06-06 12:12:12")))
-  (is (= [:date_trunc (hx/literal "month") "2021-06-06 12:12:12"]
+  (is (= [[:date_trunc (hx/literal "month") [:cast "2021-06-06 12:12:12" :timestamptz]]]
          (sql.qp/date :firebolt :month "2021-06-06 12:12:12")))
-  (is (= [:date_trunc (hx/literal "quarter") "2021-06-06 12:12:12"]
+  (is (= [[:date_trunc (hx/literal "quarter") [:cast "2021-06-06 12:12:12" :timestamptz]]]
          (sql.qp/date :firebolt :quarter "2021-06-06 12:12:12")))
-  (is (= [:date_trunc (hx/literal "year") "2021-06-06 12:12:12"]
+  (is (= [[:date_trunc (hx/literal "year") [:cast "2021-06-06 12:12:12" :timestamptz]]]
          (sql.qp/date :firebolt :year "2021-06-06 12:12:12")))
-  (is (= [:to_timestamp "2021-06-06 12:12:12"]
+  (is (= [[:to_timestamp "2021-06-06 12:12:12"]]
          (sql.qp/unix-timestamp->honeysql :firebolt :seconds "2021-06-06 12:12:12"))))
 
 ; TEST - extracting the part of date functions
 (deftest date-extraction-functions-test
-  (is (= [:to_minute (hx/with-type-info [:cast "2021-06-06 12:12:12" [:raw "timestamp"]] #:hx{:database-type "timestamp"})]
+  (is (= [[:extract [:raw "minute" " FROM " [:cast "2021-06-06 12:12:12" :timestamptz]]]]
          (sql.qp/date :firebolt :minute-of-hour "2021-06-06 12:12:12")))
-  (is (= [:to_hour (hx/with-type-info [:cast "2021-06-06 12:12:12" [:raw "timestamp"]] #:hx{:database-type "timestamp"})]
+  (is (= [[:extract [:raw "hour" " FROM " [:cast "2021-06-06 12:12:12" :timestamptz]]]]
          (sql.qp/date :firebolt :hour-of-day "2021-06-06 12:12:12")))
-  (is (= [:to_day_of_month "2021-06-06 12:12:12"]
+  (is (= [[:extract [:raw "day" " FROM " [:cast "2021-06-06 12:12:12" :timestamptz]]]]
          (sql.qp/date :firebolt :day-of-month "2021-06-06 12:12:12")))
-  (is (= [:to_day_of_year "2021-06-06 12:12:12"]
+  (is (= [[:extract [:raw "doy" " FROM " [:cast "2021-06-06 12:12:12" :timestamptz]]]]
          (sql.qp/date :firebolt :day-of-year "2021-06-06 12:12:12")))
-  (is (= [:to_week "2021-06-06 12:12:12"]
+  (is (= (honeysql.core/call :ceil
+           (honeysql.core/call :/
+             [[:extract [:raw "doy" " FROM " [:cast
+                 [[:date_add "day" -1
+                   [[:date_trunc [:metabase.util.honey-sql-2/literal "week"]
+                     [:cast [[:date_add "day" 1 "2021-06-06 12:12:12"]] :timestamptz]]]]]
+                 :timestamptz]]]]
+             7.0))
          (sql.qp/date :firebolt :week-of-year "2021-06-06 12:12:12")))
-  (is (= [:to_month "2021-06-06 12:12:12"]
+  (is (= [[:extract [:raw "month" " FROM " [:cast "2021-06-06 12:12:12" :timestamptz]]]]
          (sql.qp/date :firebolt :month-of-year "2021-06-06 12:12:12")))
-  (is (= [:to_quarter "2021-06-06 12:12:12"]
+  (is (= [[:extract [:raw "quarter" " FROM " [:cast "2021-06-06 12:12:12" :timestamptz]]]]
          (sql.qp/date :firebolt :quarter-of-year "2021-06-06 12:12:12"))))
 
 (deftest current-datetime-honeysql-form-test
-  (is (= (hx/with-type-info [:cast [:raw "NOW()"] [:raw "timestamp"]] #:hx{:database-type "timestamp"})
+  (is (= :%now
      (sql.qp/current-datetime-honeysql-form :firebolt))))
 
 ; TODO: Test db-default-timezone instead
@@ -161,7 +167,7 @@
          (driver/database-supports? :firebolt :expression-aggregations nil)))
   (is (= false
          (driver/database-supports? :firebolt :standard-deviation-aggregations nil)))
-  (is (= true
+  (is (= false
          (driver/database-supports? :firebolt :percentile-aggregations nil)))
   (is (= false
          (driver/database-supports? :firebolt :nested-fields nil)))
@@ -169,7 +175,7 @@
          (driver/database-supports? :firebolt :set-timezone nil)))
   (is (= false
          (driver/database-supports? :firebolt :nested-queries nil)))
-  (is (= true
+  (is (= false
          (driver/database-supports? :firebolt :binning nil)))
   (is (= true
          (driver/database-supports? :firebolt :regex nil))))
@@ -234,4 +240,4 @@
                                       ;; now take a look at the Tables in the database, there should be an entry for the view
                                       (is (= [{:name "example_view"}]
                                              (filter (has-value :name "example_view") (map (partial into {})
-                                                                                           (t2/select :conn spec [Table :name] :db_id (u/the-id database))))))))))))
+                                                                                           (t2/select [Table :name] :db_id (u/the-id database))))))))))))
