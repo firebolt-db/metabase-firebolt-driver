@@ -14,9 +14,12 @@
             [metabase.driver.sql-jdbc.execute.legacy-impl :as legacy]
             [metabase.driver.sql.util.unprepare :as unprepare]
             [metabase.driver.sql.query-processor :as sql.qp]
+            [metabase.driver.sql-jdbc.execute :as sql-jdbc.execute]
             [metabase.util
+             [i18n :as i18n]
              [date-2 :as u.date]
-             [ssh :as ssh]]
+             [ssh :as ssh]
+             [log :as log]]
              [metabase.util.honey-sql-2 :as h2x])
   (:import [java.sql Types Connection ResultSet]
            [java.time LocalTime OffsetDateTime OffsetTime ZonedDateTime]))
@@ -47,6 +50,26 @@
     (-> (merge spec (select-keys details [:password :user :additional-options :account :engine_name]))
         (sql-jdbc.common/handle-additional-options  (select-keys details [:password :classname :subprotocol :user :subname :additional-options :account :engine_name]))
         )))
+
+(defn set-connection-timezone [conn timezone]
+  (try
+    (with-open [stmt (.createStatement conn)]
+      (.execute stmt (str "SET time_zone = '" timezone "'")))
+    (catch Throwable e
+      (log/error e (i18n/trs "Failed to set timezone ''{0}'' for {1} database" timezone :firebolt)))))
+
+; Set timezone if provided in connection options
+(defmethod sql-jdbc.execute/do-with-connection-with-options :firebolt
+  [driver db-or-id-or-spec options f]
+  (sql-jdbc.execute/do-with-resolved-connection
+    driver
+    db-or-id-or-spec
+    options
+    (fn [^Connection conn]
+      (let [timezone (get options :session-timezone)]
+        (when timezone
+          (set-connection-timezone conn timezone)))
+      (f conn))))
 
 ; Testing the firebolt database connection
 (defmethod driver/can-connect? :firebolt [driver details]
@@ -164,6 +187,19 @@
 (defmethod sql.qp/cast-temporal-string [:firebolt :Coercion/ISO8601->Time]
  [_driver _semantic_type expr]
   (h2x/maybe-cast :string expr))
+
+;; insert datetime with timezone in UTC
+(defmethod sql-jdbc.execute/set-parameter [::use-legacy-classes-for-read-and-set java.time.OffsetTime]
+  [driver preparedStmt idx timestamp]
+  (sql-jdbc.execute/set-parameter driver preparedStmt idx (t/sql-time (t/with-offset-same-instant timestamp (t/zone-offset 0)))))
+
+(defmethod sql-jdbc.execute/set-parameter [::use-legacy-classes-for-read-and-set java.time.OffsetDateTime]
+  [driver preparedStmt idx timestamp]
+  (sql-jdbc.execute/set-parameter driver preparedStmt idx (t/sql-timestamp (t/with-offset-same-instant timestamp (t/zone-offset 0)))))
+
+(defmethod sql-jdbc.execute/set-parameter [:firebolt java.time.ZonedDateTime]
+  [driver preparedStmt idx timestamp]
+  (sql-jdbc.execute/set-parameter driver preparedStmt idx (t/sql-timestamp (t/with-zone-same-instant timestamp (t/zone-id "UTC")))))
 ;;; ------------------------------------------------- query handling -------------------------------------------------
 
 ;(models/defmodel Table :metabase_table)
@@ -266,7 +302,7 @@
 
 (defmethod driver/database-supports? [:firebolt :case-sensitivity-string-filter-options]  [_ _ _] false)
 
-(defmethod driver/database-supports? [:firebolt :set-timezone]  [_ _ _] false)
+(defmethod driver/database-supports? [:firebolt :set-timezone]  [_ _ _] true)
 
 (defmethod driver/database-supports? [:firebolt :nested-fields]  [_ _ _] false)
 
