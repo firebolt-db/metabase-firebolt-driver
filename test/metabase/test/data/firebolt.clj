@@ -95,7 +95,7 @@
             pk-field-name)))
 
 ; Implement this to set the type of primary key field
-(defmethod sql.tx/pk-sql-type :firebolt [_] "INTEGER")
+(defmethod sql.tx/pk-sql-type :firebolt [_] "int")
 
 ; I'm not sure why `driver/supports?` above doesn't rectify this, but make `add-fk-sql a noop
 (defmethod sql.tx/add-fk-sql :firebolt [& _] nil)
