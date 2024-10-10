@@ -5,6 +5,7 @@
             [clojure.java.jdbc :as jdbc]
             [java-time.api :as t]
             [metabase.driver :as driver]
+            [metabase.driver.common :as driver.common]
             [metabase.driver.sql-jdbc.sync.describe-table :as sql-jdbc.describe-table]
             [metabase.driver.sql-jdbc
              [common :as sql-jdbc.common]
