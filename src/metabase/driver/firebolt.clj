@@ -133,12 +133,7 @@
 (defmethod sql.qp/date [:firebolt :year-of-era] [_ _ expr] (extract "year" expr))
 ; account for start of week setting in the :day-of-week implementation
 (defmethod sql.qp/date [:firebolt :day-of-week] [_ _ expr]
-  (let [offset (driver.common/start-of-week-offset :firebolt)]
-    (if (not= offset 0)
-      (extract "isodow" (sql.qp/add-interval-honeysql-form :firebolt expr (- offset 7) :day))
-      (extract "isodow" expr)
-      )
-    ))
+  (sql.qp/adjust-day-of-week :firebolt (extract "isodow" expr)))
 
 ; Return a appropriate HoneySQL form for converting a Unix timestamp integer field or value to an proper SQL Timestamp.
 (defmethod sql.qp/unix-timestamp->honeysql [:firebolt :seconds] [_ _ expr] [[:to_timestamp expr]])
