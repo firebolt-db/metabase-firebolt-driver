@@ -194,16 +194,16 @@
 
 ;; insert datetime with timezone in UTC
 (defmethod sql-jdbc.execute/set-parameter [::use-legacy-classes-for-read-and-set java.time.OffsetTime]
-  [driver ps i t]
-  (sql-jdbc.execute/set-parameter driver ps i (t/sql-time (t/with-offset-same-instant t (t/zone-offset 0)))))
+  [driver preparedStmt idx timestamp]
+  (sql-jdbc.execute/set-parameter driver preparedStmt idx (t/sql-time (t/with-offset-same-instant timestamp (t/zone-offset 0)))))
 
 (defmethod sql-jdbc.execute/set-parameter [::use-legacy-classes-for-read-and-set java.time.OffsetDateTime]
-  [driver ps i t]
-  (sql-jdbc.execute/set-parameter driver ps i (t/sql-timestamp (t/with-offset-same-instant t (t/zone-offset 0)))))
+  [driver preparedStmt idx timestamp]
+  (sql-jdbc.execute/set-parameter driver preparedStmt idx (t/sql-timestamp (t/with-offset-same-instant timestamp (t/zone-offset 0)))))
 
 (defmethod sql-jdbc.execute/set-parameter [:firebolt java.time.ZonedDateTime]
-  [driver ps i t]
-  (sql-jdbc.execute/set-parameter driver ps i (t/sql-timestamp (t/with-zone-same-instant t (t/zone-id "UTC")))))
+  [driver preparedStmt idx timestamp]
+  (sql-jdbc.execute/set-parameter driver preparedStmt idx (t/sql-timestamp (t/with-zone-same-instant timestamp (t/zone-id "UTC")))))
 ;;; ------------------------------------------------- query handling -------------------------------------------------
 
 ;(models/defmodel Table :metabase_table)
