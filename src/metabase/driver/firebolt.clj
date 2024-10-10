@@ -247,20 +247,16 @@
   [_ [_ field min-val max-val]]
   [:nest [:between (sql.qp/->honeysql :firebolt field) (sql.qp/->honeysql :firebolt min-val) (sql.qp/->honeysql :firebolt max-val)]])
 
+; Choose post-filtered-active-tables method for firebolt, it's described as
+; Alternative implementation of `active-tables` best suited for DBs with little or no support for schemas
+(defmethod sql-jdbc.sync/active-tables :firebolt
+  [& args]
+  (apply sql-jdbc.sync/post-filtered-active-tables args))
 
-;; ------- Methods to handle Views, Describe database to not return Agg and Join indexes in Firebolt ----------------
-;; All the functions below belong to describe-table.clj which are all private in metabase and cant be called or
-;; extended directly. Hence, needed to implement the entire function chain
-;; As we should only return public tables that are not external, SHOW TABLES/SHOW VIEWS cannot be used.
-(defmethod driver/describe-database :firebolt
-  [_ {:keys [details] :as database}]
-  {:tables
-   (with-open [conn (jdbc/get-connection (sql-jdbc.conn/db->pooled-connection-spec database))]
-     (set/union
-      (set (for [{:keys [database table_name]} (jdbc/query {:connection conn} ["SELECT table_name from information_schema.tables WHERE table_schema LIKE 'public' AND table_type NOT LIKE 'EXTERNAL'"])]
-             {:name table_name :schema (when (seq database) database)}))
-      (set(for [{:keys [database table_name]} (jdbc/query {:connection conn} ["SELECT table_name from information_schema.views WHERE table_schema LIKE 'public'"])]
-            {:name table_name :schema (when (seq database) database)}))))})
+; Exclude information_schema schema from syncing
+(defmethod sql-jdbc.sync/excluded-schemas :firebolt
+  [_]
+  #{"information_schema"})
 
 (defmethod sql-jdbc.describe-table/get-table-pks :firebolt
   [_ ^Connection conn db-name-or-nil table]
@@ -285,27 +281,17 @@
   )
 
 ;-------------------------Supported features---------------------------
-
-(defmethod driver/database-supports? [:firebolt :basic-aggregations]  [_ _ _] true)
-
-(defmethod driver/database-supports? [:firebolt :expression-aggregations]  [_ _ _] true)
-
-(defmethod driver/database-supports? [:firebolt :foreign-keys]  [_ _ _] false)
-
-(defmethod driver/database-supports? [:firebolt :binning]  [_ _ _] false)
-
-(defmethod driver/database-supports? [:firebolt :regex]  [_ _ _] true)
-
-(defmethod driver/database-supports? [:firebolt :standard-deviation-aggregations]  [_ _ _] false)
-
-(defmethod driver/database-supports? [:firebolt :nested-queries]  [_ _ _] false)
-
-(defmethod driver/database-supports? [:firebolt :case-sensitivity-string-filter-options]  [_ _ _] false)
-
-(defmethod driver/database-supports? [:firebolt :set-timezone]  [_ _ _] true)
-
-(defmethod driver/database-supports? [:firebolt :nested-fields]  [_ _ _] false)
-
-(defmethod driver/database-supports? [:firebolt :advanced-math-expressions]  [_ _ _] false)
-
-(defmethod driver/database-supports? [:firebolt :percentile-aggregations]  [_ _ _] false)
+(doseq [[feature supported?] {:basic-aggregations                    true
+                             :expression-aggregations                true
+                             :foreign-keys                           false
+                             :binning                                false
+                             :regex                                  true
+                             :standard-deviation-aggregations        false
+                             :nested-queries                         false
+                             :case-sensitivity-string-filter-options false
+                             :set-timezone                           true
+                             :nested-fields                          false
+                             :advanced-math-expressions              false
+                             :percentile-aggregations                false
+                             :schemas                                false}]
+(defmethod driver/database-supports? [:firebolt feature] [_driver _feature _db] supported?))
