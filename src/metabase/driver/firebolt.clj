@@ -256,7 +256,7 @@
 ; Exclude information_schema schema from syncing
 (defmethod sql-jdbc.sync/excluded-schemas :firebolt
   [_]
-  #{"information_schema"})
+  [])
 
 (defmethod sql-jdbc.describe-table/get-table-pks :firebolt
   [_ ^Connection conn db-name-or-nil table]
