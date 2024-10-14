@@ -145,7 +145,7 @@
   (sql.qp/adjust-start-of-week :firebolt #(date-trunc "week" %) expr))
 
 ; Extraction functions
-(defmethod sql.qp/date [:firebolt :second-of-minute] [_ _ expr] (extract "second" expr))
+(defmethod sql.qp/date [:firebolt :second-of-minute] [_ _ expr] [:cast [:floor (extract "second" expr)] :int])
 (defmethod sql.qp/date [:firebolt :minute-of-hour] [_ _ expr] (extract "minute" expr))
 (defmethod sql.qp/date [:firebolt :hour-of-day] [_ _ expr] (extract "hour" expr))
 (defmethod sql.qp/date [:firebolt :day-of-month] [_ _ expr] (extract "day" expr))
