@@ -22,7 +22,7 @@
 (sql-jdbc.tx/add-test-extensions! :firebolt)
 
 ; during unit tests don't treat firebolt as having FK support
-(defmethod driver/database-supports? [:firebolt :foreign-keys] [_ _ _] (not config/is-test?))
+(defmethod driver/database-supports? [:firebolt :test/jvm-timezone-setting] [_ _ _] false)
 
 ;;; ----------------------------------------------- Connection Details -----------------------------------------------
 
