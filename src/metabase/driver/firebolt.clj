@@ -212,7 +212,7 @@
 ; call REGEXP_MATCHES function when regex-match-first is called
 (defmethod sql.qp/->honeysql [:firebolt :regex-match-first]
            [_ [_ arg pattern]]
-           [:REGEXP_LIKE (sql.qp/->honeysql :firebolt arg) pattern])
+           [:REGEXP_EXTRACT (sql.qp/->honeysql :firebolt arg) pattern])
 
 (defmethod sql.qp/->honeysql [:firebolt :contains]
             [_ [_ field value options]]
