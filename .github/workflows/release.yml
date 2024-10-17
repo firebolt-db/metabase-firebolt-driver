@@ -48,7 +48,7 @@ jobs:
             ]
       - name: "Maven deploy"
         run: |
-          mvn deploy:deploy-file -Durl=https://oss.sonatype.org/service/local/staging/deploy/maven2/ \
+          mvn deploy:deploy-file -Durl=https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/ \
                        -DgroupId=metabase \
                        -DartifactId=firebolt-driver \
                        -Dversion=${{ needs.build-driver.outputs.version }} \
