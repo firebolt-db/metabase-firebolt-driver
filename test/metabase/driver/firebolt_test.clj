@@ -172,7 +172,7 @@
          (driver/database-supports? :firebolt :percentile-aggregations nil)))
   (is (= false
          (driver/database-supports? :firebolt :nested-fields nil)))
-  (is (= false
+  (is (= true
          (driver/database-supports? :firebolt :set-timezone nil)))
   (is (= false
          (driver/database-supports? :firebolt :nested-queries nil)))
