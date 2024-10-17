@@ -46,6 +46,10 @@ jobs:
                 "password": "${{ secrets.MAVEN_REPO_PASSWORD }}"
               }
             ]
+      - uses: actions/checkout@v3
+        with:
+          sparse-checkout: 'pom.xml'
+          sparse-checkout-cone-mode: false
       - name: "Maven deploy"
         run: |
           mvn deploy:deploy-file -Durl=https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/ \
