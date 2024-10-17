@@ -1,0 +1,50 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <name>metabase-firebolt-driver</name>
+    <description>A driver for Metabase to allow connecting to Firebolt</description>
+    <url>https://github.com/firebolt-db/metabase-firebolt-driver</url>
+    <artifactId>metabase-firebolt-driver</artifactId>
+    <groupId>io.firebolt</groupId>
+    <packaging>jar</packaging>
+    <version>${version}</version>
+
+    <developers>
+        <developer>
+            <id>sburlakov</id>
+            <name>Stepan Burlakov</name>
+            <email>stepan.burlakov@firebolt.io</email>
+        </developer>
+        <developer>
+            <id>ptiurin</id>
+            <name>Petro Tiurin</name>
+            <email>petro.tiurin@firebolt.io</email>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:github.com/firebolt-db/metabase-firebolt-driver.git</connection>
+        <developerConnection>scm:git:github.com/firebolt-db/metabase-firebolt-driver.git</developerConnection>
+        <url>https://github.com/firebolt-db/metabase-firebolt-driver</url>
+    </scm>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>1.6</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

@@ -49,9 +49,11 @@ jobs:
       - name: "Maven deploy"
         run: |
           mvn deploy:deploy-file -Durl=https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/ \
-                       -DgroupId=metabase \
-                       -DartifactId=firebolt-driver \
-                       -Dversion=${{ needs.build-driver.outputs.version }} \
-                       -Dpackaging=jar \
-                       -Dfile=${{ needs.build-driver.outputs.jar-name }} \
+                       -DpomFile=pom.xml \
                        -DrepositoryId=sonatype-nexus-staging \
+                       -Dversion=${{ needs.build-driver.outputs.version }} \
+                       -Dfile=${{ needs.build-driver.outputs.jar-name }} \
+                       -Dsonatype-nexus-stagingUsername=${{ secrets.MAVEN_REPO_USERNAME }} \
+                       -Dsonatype-nexus-stagingPassword=${{ secrets.MAVEN_REPO_PASSWORD }} \
+                       -Dgpg.keyname=${{ secrets.GRADLE_SIGNING_KEY }} \
+                       -Dgpg.passphrase=${{ secrets.GRADLE_SIGNING_PASSWORD }} \
