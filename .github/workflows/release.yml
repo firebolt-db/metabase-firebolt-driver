@@ -62,5 +62,3 @@ jobs:
                        -Dfile=${{ needs.build-driver.outputs.jar-name }} \
                        -Dsonatype-nexus-stagingUsername=${{ secrets.MAVEN_REPO_USERNAME }} \
                        -Dsonatype-nexus-stagingPassword=${{ secrets.MAVEN_REPO_PASSWORD }} \
-                       -Dgpg.keyname=${{ secrets.GRADLE_SIGNING_KEY }} \
-                       -Dgpg.passphrase=${{ secrets.GRADLE_SIGNING_PASSWORD }} \
