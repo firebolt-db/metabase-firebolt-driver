@@ -42,7 +42,7 @@ jobs:
             [
               {
                 "id": "firebolt",
-                "username": "${{ secrets.MAVEN_REPO_USERNAME }}", ,
+                "username": "${{ secrets.MAVEN_REPO_USERNAME }}",
                 "password": "${{ secrets.MAVEN_REPO_PASSWORD }}"
               }
             ]
