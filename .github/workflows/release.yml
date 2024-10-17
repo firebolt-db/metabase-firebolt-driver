@@ -24,6 +24,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build-driver]
     steps:
+      - uses: actions/checkout@v3
+        with:
+          sparse-checkout: 'pom.xml'
+          sparse-checkout-cone-mode: false
       - name: Download jar file
         uses: actions/download-artifact@v4.1.7
         with:
@@ -41,17 +45,20 @@ jobs:
           servers: >
             [
               {
-                "id": "firebolt",
-                "username": "${{ secrets.REPSY_USERNAME }}" ,
-                "password": "${{ secrets.REPSY_PASSWORD }}"
+                "id": "sonatype-nexus-staging",
+                "username": "${{ secrets.MAVEN_REPO_USERNAME }}",
+                "password": "${{ secrets.MAVEN_REPO_PASSWORD }}"
               }
             ]
       - name: "Maven deploy"
+        env:
+          SIGN_KEY: ${{ secrets.GRADLE_SIGNING_KEY }}
+          SIGN_KEY_PASS: ${{ secrets.GRADLE_SIGNING_PASSWORD }}
         run: |
-          mvn deploy:deploy-file -Durl=https://repo.repsy.io/mvn/firebolt/maven \
-                       -DgroupId=metabase \
-                       -DartifactId=firebolt-driver \
+          mvn deploy:deploy-file -Durl=https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/ \
+                       -DpomFile=pom.xml \
+                       -DrepositoryId=sonatype-nexus-staging \
                        -Dversion=${{ needs.build-driver.outputs.version }} \
-                       -Dpackaging=jar \
                        -Dfile=${{ needs.build-driver.outputs.jar-name }} \
-                       -DrepositoryId=firebolt
+                       -Dsonatype-nexus-stagingUsername=${{ secrets.MAVEN_REPO_USERNAME }} \
+                       -Dsonatype-nexus-stagingPassword=${{ secrets.MAVEN_REPO_PASSWORD }} \
