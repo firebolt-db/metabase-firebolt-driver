@@ -42,16 +42,16 @@ jobs:
             [
               {
                 "id": "firebolt",
-                "username": "${{ secrets.REPSY_USERNAME }}" ,
-                "password": "${{ secrets.REPSY_PASSWORD }}"
+                "username": "${{ secrets.MAVEN_REPO_USERNAME }}", ,
+                "password": "${{ secrets.MAVEN_REPO_PASSWORD }}"
               }
             ]
       - name: "Maven deploy"
         run: |
-          mvn deploy:deploy-file -Durl=https://repo.repsy.io/mvn/firebolt/maven \
+          mvn deploy:deploy-file -Durl=https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/ \
                        -DgroupId=metabase \
                        -DartifactId=firebolt-driver \
                        -Dversion=${{ needs.build-driver.outputs.version }} \
                        -Dpackaging=jar \
                        -Dfile=${{ needs.build-driver.outputs.jar-name }} \
-                       -DrepositoryId=firebolt
+                       -DrepositoryId=sonatype-nexus-staging \
