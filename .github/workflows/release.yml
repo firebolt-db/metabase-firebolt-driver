@@ -51,6 +51,9 @@ jobs:
               }
             ]
       - name: "Maven deploy"
+        env:
+          SIGN_KEY: ${{ secrets.GRADLE_SIGNING_KEY }}
+          SIGN_KEY_PASS: ${{ secrets.GRADLE_SIGNING_PASSWORD }}
         run: |
           mvn deploy:deploy-file -Durl=https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/ \
                        -DpomFile=pom.xml \
