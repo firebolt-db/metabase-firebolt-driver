@@ -172,7 +172,7 @@
          (driver/database-supports? :firebolt :percentile-aggregations nil)))
   (is (= false
          (driver/database-supports? :firebolt :nested-fields nil)))
-  (is (= false
+  (is (= true
          (driver/database-supports? :firebolt :set-timezone nil)))
   (is (= false
          (driver/database-supports? :firebolt :nested-queries nil)))
@@ -192,13 +192,13 @@
         (is (= (map
                 #(str/replace % #"\s+" " ")
                 ["DROP TABLE IF EXISTS \"test_data_users\""
-                 "CREATE DIMENSION TABLE \"test_data_users\" (\"id\" INTEGER, \"name\" String NULL, \"last_login\" DateTime NULL, \"password\" String NULL) PRIMARY INDEX \"id\""
+                 "CREATE DIMENSION TABLE \"test_data_users\" (\"id\" int, \"name\" text NULL, \"last_login\" timestamp NULL, \"password\" text NULL) PRIMARY INDEX \"id\""
                  "DROP TABLE IF EXISTS \"test_data_categories\""
-                 "CREATE DIMENSION TABLE \"test_data_categories\" (\"id\" INTEGER, \"name\" String NULL) PRIMARY INDEX \"id\""
+                 "CREATE DIMENSION TABLE \"test_data_categories\" (\"id\" int, \"name\" text NULL) PRIMARY INDEX \"id\""
                  "DROP TABLE IF EXISTS \"test_data_venues\""
-                 "CREATE DIMENSION TABLE \"test_data_venues\" (\"id\" INTEGER, \"name\" String NULL, \"category_id\" Int NULL, \"latitude\" Float NULL, \"longitude\" Float NULL, \"price\" Int NULL) PRIMARY INDEX \"id\""
+                 "CREATE DIMENSION TABLE \"test_data_venues\" (\"id\" int, \"name\" text NULL, \"category_id\" int NULL, \"latitude\" double precision NULL, \"longitude\" double precision NULL, \"price\" int NULL) PRIMARY INDEX \"id\""
                  "DROP TABLE IF EXISTS \"test_data_checkins\""
-                 "CREATE DIMENSION TABLE \"test_data_checkins\" (\"id\" INTEGER, \"date\" Date NULL, \"user_id\" Int NULL, \"venue_id\" Int NULL) PRIMARY INDEX \"id\""])
+                 "CREATE DIMENSION TABLE \"test_data_checkins\" (\"id\" int, \"date\" date NULL, \"user_id\" int NULL, \"venue_id\" int NULL) PRIMARY INDEX \"id\""])
                (ddl/create-db-tables-ddl-statements :firebolt (-> (mt/get-dataset-definition dataset-defs/test-data)
                                                                   (update :database-name #(str %)))))))))
 

@@ -21,8 +21,8 @@
 
 (sql-jdbc.tx/add-test-extensions! :firebolt)
 
-; during unit tests don't treat firebolt as having FK support
-(defmethod driver/database-supports? [:firebolt :foreign-keys] [_ _ _] (not config/is-test?))
+; Report that firebolt JDBC doesn't send JVM timezone setting to the server
+(defmethod driver/database-supports? [:firebolt :test/jvm-timezone-setting] [_ _ _] false)
 
 ;;; ----------------------------------------------- Connection Details -----------------------------------------------
 
@@ -95,7 +95,7 @@
             pk-field-name)))
 
 ; Implement this to set the type of primary key field
-(defmethod sql.tx/pk-sql-type :firebolt [_] "INTEGER")
+(defmethod sql.tx/pk-sql-type :firebolt [_] "int")
 
 ; I'm not sure why `driver/supports?` above doesn't rectify this, but make `add-fk-sql a noop
 (defmethod sql.tx/add-fk-sql :firebolt [& _] nil)
