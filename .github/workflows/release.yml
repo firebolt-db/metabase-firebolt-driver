@@ -28,7 +28,7 @@ jobs:
           lein: '2.9.10'
 
       - name: "Install dependencies"
-        run: lein deps
+        run: lein prep && lein deps
 
       - name: Import GPG key
         uses: crazy-max/ghaction-import-gpg@v6

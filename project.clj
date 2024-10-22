@@ -55,16 +55,16 @@
                                 [:goals ([:goal "jar"])]
                                 [:phase "deploy"]])}]]
 
+  :prep-tasks [["shell" "bash" "-c"
+                "TMP_DIR=\\$(mktemp -d) && \\
+                wget -nv https://downloads.metabase.com/\\$METABASE_VERSION/metabase.jar -O \\$TMP_DIR/metabase.jar && \\
+                mkdir -p repo && \\
+                mvn deploy:deploy-file -Durl=file:repo -DgroupId=com.firebolt -DartifactId=metabase-core -Dversion=1.40 -Dpackaging=jar -Dfile=\\$TMP_DIR/metabase.jar"]
+               "javac" "compile"]
 
   :profiles
   {:provided
-   {:dependencies [[com.firebolt/metabase-core "1.40"]]
-    :prep-tasks [["shell" "bash" "-c"
-                  "TMP_DIR=\\$(mktemp -d) && \\
-                  wget -nv https://downloads.metabase.com/\\$METABASE_VERSION/metabase.jar -O \\$TMP_DIR/metabase.jar && \\
-                  mkdir -p repo && \\
-                  mvn deploy:deploy-file -Durl=file:repo -DgroupId=com.firebolt -DartifactId=metabase-core -Dversion=1.40 -Dpackaging=jar -Dfile=\\$TMP_DIR/metabase.jar"]
-                 "javac" "compile"]}
+   {:dependencies [[com.firebolt/metabase-core "1.40"]]}
 
    :uberjar
    {:auto-clean     true
