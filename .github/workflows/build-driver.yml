@@ -58,11 +58,11 @@ jobs:
         id: package
         run: |
           LEIN_SNAPSHOTS_IN_RELEASE=true DEBUG=1 lein uberjar
-          echo "version=${lein project-version | tail -1}" >> "${GITHUB_OUTPUT}"
-          echo "jar-name=${lein file-name | tail -1}" >> "${GITHUB_OUTPUT}"
+          echo "version=$(lein project-version | tail -1)" >> "${GITHUB_OUTPUT}"
+          echo "jar-name=$(lein file-name | tail -1)" >> "${GITHUB_OUTPUT}"
 
       - name: Upload resulting jar file
         uses: actions/upload-artifact@v4
         with:
-          name: ${{steps.package.outputs.jar-name}}
-          path: target/uberjar/${{steps.package.outputs.jar-name}}
+          name: ${{ steps.package.outputs.jar-name }}
+          path: target/uberjar/${{ steps.package.outputs.jar-name }}
