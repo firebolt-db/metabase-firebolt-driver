@@ -31,40 +31,38 @@ jobs:
   build-driver:
     runs-on: ubuntu-latest
     outputs:
-      jar-name: firebolt.metabase-driver-${{steps.get-version.outputs.version}}.jar
-      version: ${{steps.get-version.outputs.version}}
+      jar-name: ${{ steps.package.outputs.jar-name }}
+      version: ${{ steps.package.outputs.version }}
     steps:
       - uses: actions/checkout@v2
         with:
           ref: ${{ github.event.inputs.branch || 'develop' }}
-      - name: "Download metabase"
-        run: wget https://downloads.metabase.com/${{ inputs.metabase-version }}/metabase.jar
-      - name: "Maven install"
-        run: |
-          mkdir repo
-          mvn deploy:deploy-file -Durl=file:repo -DgroupId=com.firebolt -DartifactId=metabase-core -Dversion=1.40 -Dpackaging=jar -Dfile=metabase.jar
-      - name: "Install dependencies"
-        run: lein deps
-
-      - name: "Package into a jar"
-        run: LEIN_SNAPSHOTS_IN_RELEASE=true DEBUG=1 lein uberjar
 
       - name: Install clojure tools
         uses: DeLaGuardo/setup-clojure@3.7
         with:
-          cli: '1.11.1.1155'
           lein: '2.9.10'
 
-      - name: Get version
-        id: get-version
+      - name: "Download metabase"
+        run: wget https://downloads.metabase.com/${{ inputs.metabase-version }}/metabase.jar
+
+      - name: "Maven install"
         run: |
-          clojure -e '(-> "./project.clj" slurp read-string (nth 2))'
-          version=$(clojure -e '(-> "./project.clj" slurp read-string (nth 2))' | tr -d '"')
-          mv target/uberjar/firebolt.metabase-driver.jar target/uberjar/firebolt.metabase-driver-${version}.jar
-          echo "version=${version}" >> "${GITHUB_OUTPUT}"
+          mkdir repo
+          mvn deploy:deploy-file -Durl=file:repo -DgroupId=com.firebolt -DartifactId=metabase-core -Dversion=1.40 -Dpackaging=jar -Dfile=metabase.jar
+
+      - name: "Install dependencies"
+        run: lein deps
+
+      - name: "Package into a jar"
+        id: package
+        run: |
+          LEIN_SNAPSHOTS_IN_RELEASE=true DEBUG=1 lein uberjar
+          echo "version=${lein project-version | tail -1}" >> "${GITHUB_OUTPUT}"
+          echo "jar-name=${lein file-name | tail -1}" >> "${GITHUB_OUTPUT}"
 
       - name: Upload resulting jar file
         uses: actions/upload-artifact@v4
         with:
-          name: firebolt.metabase-driver-${{steps.get-version.outputs.version}}.jar
-          path: target/uberjar/firebolt.metabase-driver-${{steps.get-version.outputs.version}}.jar
+          name: ${{steps.package.outputs.jar-name}}
+          path: target/uberjar/${{steps.package.outputs.jar-name}}
