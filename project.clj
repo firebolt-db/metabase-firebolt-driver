@@ -37,7 +37,7 @@
                               :password :env/MAVEN_REPO_PASSWORD}]
                  ["project" "file:repo"]]
 
-  :signing {:gpg-key :env/SIGN_KEY_ID}
+  :signing {:gpg-key ~(System/getenv "SIGN_KEY_ID")}
 
   :plugins [[lein-pprint "1.3.2"]]
 
