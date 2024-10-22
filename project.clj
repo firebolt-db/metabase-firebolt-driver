@@ -61,9 +61,9 @@
                                 [:phase "deploy"]])}]]
 
   ;; Fix issue with Azure <-> Maven comunication
-  :jvm-opts ["-Dhttp.keepAlive=false"
+  :jvm-opts ["-Dhttp.keepAlive=true"
              "-Dmaven.wagon.http.pool=false"
-             "-Dmaven.wagon.httpconnectionManager.ttlSeconds=120"]
+             "-Dmaven.wagon.httpconnectionManager.ttlSeconds=3600"]
 
   :profiles
   {:provided
