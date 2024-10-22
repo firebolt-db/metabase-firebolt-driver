@@ -43,14 +43,6 @@ jobs:
         with:
           lein: '2.9.10'
 
-      - name: "Download metabase"
-        run: wget https://downloads.metabase.com/${{ inputs.metabase-version }}/metabase.jar
-
-      - name: "Maven install"
-        run: |
-          mkdir repo
-          mvn deploy:deploy-file -Durl=file:repo -DgroupId=com.firebolt -DartifactId=metabase-core -Dversion=1.40 -Dpackaging=jar -Dfile=metabase.jar
-
       - name: "Install dependencies"
         run: lein deps
 

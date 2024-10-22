@@ -39,7 +39,8 @@
 
   :signing {:gpg-key ~(System/getenv "SIGN_KEY_ID")}
 
-  :plugins [[lein-pprint "1.3.2"]]
+  :plugins [[lein-pprint "1.3.2"]
+            [lein-shell "0.5.0"]]
 
   :aliases {"file-name" ["with-profile" "uberjar" "pprint" "--no-pretty" "--" ":uberjar-name"]
             "project-version" ["pprint" "--no-pretty" "--" ":version"]}
@@ -57,7 +58,13 @@
 
   :profiles
   {:provided
-   {:dependencies [[com.firebolt/metabase-core "1.40"]]}
+   {:dependencies [[com.firebolt/metabase-core "1.40"]]
+    :prep-tasks [["shell" "bash" "-c"
+                  "TMP_DIR=\\$(mktemp -d) && \\
+                  wget -nv https://downloads.metabase.com/\\$METABASE_VERSION/metabase.jar -O \\$TMP_DIR/metabase.jar && \\
+                  mkdir -p repo && \\
+                  mvn deploy:deploy-file -Durl=file:repo -DgroupId=com.firebolt -DartifactId=metabase-core -Dversion=1.40 -Dpackaging=jar -Dfile=\\$TMP_DIR/metabase.jar"]
+                 "javac" "compile"]}
 
    :uberjar
    {:auto-clean     true
