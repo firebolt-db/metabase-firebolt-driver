@@ -3,6 +3,7 @@
 # Edit at https://www.toptal.com/developers/gitignore?templates=clojure,visualstudiocode,emacs,vim,leiningen,maven
 
 ### Clojure ###
+pom.xml
 pom.xml.asc
 *.jar
 *.class

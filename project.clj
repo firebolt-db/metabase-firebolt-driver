@@ -60,6 +60,11 @@
                                 [:goals ([:goal "jar"])]
                                 [:phase "deploy"]])}]]
 
+  ;; Fix issue with Azure <-> Maven comunication
+  :jvm-opts ["-Dhttp.keepAlive=false"
+             "-Dmaven.wagon.http.pool=false"
+             "-Dmaven.wagon.httpconnectionManager.ttlSeconds=120"]
+
   :profiles
   {:provided
    {:dependencies [[com.firebolt/metabase-core "1.40"]]}
