@@ -44,7 +44,9 @@ jobs:
           lein: '2.9.10'
 
       - name: "Install dependencies"
-        run: lein deps
+        run: |
+          METABASE_VERSION=${{ github.event.inputs.metabase-version || 'v0.48.0' }} lein get-metabase-core
+          lein deps
 
       - name: "Package into a jar"
         id: package

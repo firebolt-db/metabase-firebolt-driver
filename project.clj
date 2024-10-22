@@ -43,7 +43,12 @@
             [lein-shell "0.5.0"]]
 
   :aliases {"file-name" ["with-profile" "uberjar" "pprint" "--no-pretty" "--" ":uberjar-name"]
-            "project-version" ["pprint" "--no-pretty" "--" ":version"]}
+            "project-version" ["pprint" "--no-pretty" "--" ":version"]
+            "get-metabase-core" ["do" ["shell" "bash" "-c"
+                                       "TMP_DIR=\\$(mktemp -d) && \\
+                                       wget -nv https://downloads.metabase.com/\\$METABASE_VERSION/metabase.jar -O \\$TMP_DIR/metabase.jar && \\
+                                       mkdir -p repo && \\
+                                       mvn deploy:deploy-file -Durl=file:repo -DgroupId=com.firebolt -DartifactId=metabase-core -Dversion=1.40 -Dpackaging=jar -Dfile=\\$TMP_DIR/metabase.jar"]]}
 
   :pom-plugins [[org.apache.maven.plugins/maven-source-plugin "3.2.1"
                  ;; this section is optional, values have the same syntax as pom-addition
@@ -54,13 +59,6 @@
                  {:executions ([:execution [:id "attach-javadocs"]
                                 [:goals ([:goal "jar"])]
                                 [:phase "deploy"]])}]]
-
-  :prep-tasks [["shell" "bash" "-c"
-                "TMP_DIR=\\$(mktemp -d) && \\
-                wget -nv https://downloads.metabase.com/\\$METABASE_VERSION/metabase.jar -O \\$TMP_DIR/metabase.jar && \\
-                mkdir -p repo && \\
-                mvn deploy:deploy-file -Durl=file:repo -DgroupId=com.firebolt -DartifactId=metabase-core -Dversion=1.40 -Dpackaging=jar -Dfile=\\$TMP_DIR/metabase.jar"]
-               "javac" "compile"]
 
   :profiles
   {:provided
