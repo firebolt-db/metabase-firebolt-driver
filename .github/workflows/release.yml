@@ -46,8 +46,7 @@ jobs:
           MAVEN_REPO_USERNAME: ${{ secrets.MAVEN_REPO_USERNAME }}
           MAVEN_REPO_PASSWORD: ${{ secrets.MAVEN_REPO_PASSWORD }}
         run: |
-          DEBUG=1 lein uberjar
-          DEBUG=1 lein with-profile uberjar deploy-uberjar
+          DEBUG=1 lein deploy-uberjar
           echo "version=$(lein project-version | tail -1)" >> "${GITHUB_OUTPUT}"
           echo "jar-name=$(lein file-name | tail -1)" >> "${GITHUB_OUTPUT}"
 

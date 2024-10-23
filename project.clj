@@ -1,6 +1,9 @@
 (def version "3.0.6")
+(def uberjar-name (str "firebolt.metabase-driver-" version ".jar"))
+(def uberjar-provided-name (str "firebolt.metabase-driver-provided-" version ".jar"))
+(def uberjar-file (str "target/" uberjar-name))
 
-(defproject io.firebolt/metabase-firebolt-driver version
+(defproject io.firebolt/firebolt.metabase-driver version
 
   :description "A driver for Metabase to allow connecting to Firebolt"
   :url "https://github.com/firebolt-db/metabase-firebolt-driver"
@@ -40,8 +43,7 @@
   :signing {:gpg-key ~(System/getenv "SIGN_KEY_ID")}
 
   :plugins [[lein-pprint "1.3.2"]
-            [lein-shell "0.5.0"]
-            [camechis/deploy-uberjar "0.3.0"]]
+            [lein-shell "0.5.0"]]
 
   :aliases {"file-name" ["with-profile" "uberjar" "pprint" "--no-pretty" "--" ":uberjar-name"]
             "project-version" ["pprint" "--no-pretty" "--" ":version"]
@@ -49,7 +51,20 @@
                                        "TMP_DIR=\\$(mktemp -d) && \\
                                        wget -nv https://downloads.metabase.com/\\$METABASE_VERSION/metabase.jar -O \\$TMP_DIR/metabase.jar && \\
                                        mkdir -p repo && \\
-                                       mvn deploy:deploy-file -Durl=file:repo -DgroupId=com.firebolt -DartifactId=metabase-core -Dversion=1.40 -Dpackaging=jar -Dfile=\\$TMP_DIR/metabase.jar"]]}
+                                       mvn deploy:deploy-file -Durl=file:repo -DgroupId=com.firebolt -DartifactId=metabase-core -Dversion=1.40 -Dpackaging=jar -Dfile=\\$TMP_DIR/metabase.jar"]]
+            "sign" ["shell" "gpg" "-b" "-a" "--yes" "-u" ~(System/getenv "SIGN_KEY_ID")]
+            ;; lein just doesn't know how to deploy uberjar, so we have to do everything manually
+            "deploy-uberjar" ["do"
+                              "uberjar,"
+                              "pom,"
+                              "sign" ~(str uberjar-file ",")
+                              "sign" "pom.xml,"
+                              "shell" "mv" "pom.xml.asc" "pom.pom.asc,"
+                              "deploy" "releases" "io.firebolt/firebolt.metabase-driver" ~(str version)
+                              ~(str uberjar-file) "pom.xml"
+                              ~(str uberjar-file ".asc") "pom.pom.asc"
+                              ]
+            }
 
   :pom-plugins [[org.apache.maven.plugins/maven-source-plugin "3.2.1"
                  ;; this section is optional, values have the same syntax as pom-addition
@@ -71,7 +86,8 @@
 
   :profiles
   {:provided
-   {:dependencies [[com.firebolt/metabase-core "1.40"]]}
+   {:dependencies [[com.firebolt/metabase-core "1.40"]]
+    :uberjar-name ~(str uberjar-provided-name)}
 
    :uberjar
    {:auto-clean    true
@@ -80,5 +96,5 @@
     :target-path   "target/%s"
     :manifest      {"Implementation-Title"   "Firebolt Metabase driver"
                     "Implementation-Version" version}
-    :uberjar-name  ~(str "firebolt.metabase-driver-" version ".jar")}})
+    :uberjar-name  ~(str uberjar-name)}})
 
