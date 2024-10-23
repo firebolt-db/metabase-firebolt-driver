@@ -68,4 +68,4 @@ You should see a message on startup similar to:
 | Metabase Release | Driver Version |
 |------------------|----------------|
 | <=0.47.x         | 3.0.1          |
-| \>=0.48.x        | 3.1.0          |
+| \>=0.48.x        | 3.0.6          |

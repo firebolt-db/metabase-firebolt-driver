@@ -1,4 +1,4 @@
-(def version "3.0.5")
+(def version "3.0.6")
 
 (defproject io.firebolt/metabase-firebolt-driver version
 
