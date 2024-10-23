@@ -60,9 +60,10 @@
                                 [:goals ([:goal "jar"])]
                                 [:phase "deploy"]])}]]
 
-  ;; Fix issue with Azure <-> Maven comunication
-  :jvm-opts ["-Dhttp.keepAlive=false"
-             "-Dmaven.wagon.http.pool=false"
+  ;; Fix issue with Azure <-> Maven communication
+  ;; issue happens when we're trying to deploy from GitHub Actions
+  ;; we would receive a SockedClosed exception
+  :jvm-opts ["-Dmaven.wagon.http.pool=false"
              "-Dmaven.wagon.http.connectionManager.ttlSeconds=300"
              "-Dmaven.wagon.http.timeout=60000"
              "-Dmaven.wagon.http.retryHandler.count=5"]
@@ -72,11 +73,11 @@
    {:dependencies [[com.firebolt/metabase-core "1.40"]]}
 
    :uberjar
-   {:auto-clean     true
-    :aot            :all
-    :javac-options  ["-target" "1.8", "-source" "1.8"]
-    :target-path    "target/%s"
-    :manifest       {"Implementation-Title" "Firebolt Metabase driver"
-                     "Implementation-Version" version}
-    :uberjar-name   ~(str "metabase-firebolt-driver-" version ".jar")}})
+   {:auto-clean    true
+    :aot           :all
+    :javac-options ["-target" "1.8", "-source" "1.8"]
+    :target-path   "target/%s"
+    :manifest      {"Implementation-Title"   "Firebolt Metabase driver"
+                    "Implementation-Version" version}
+    :uberjar-name  ~(str "metabase-firebolt-driver-" version ".jar")}})
 
