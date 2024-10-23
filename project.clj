@@ -77,9 +77,7 @@
     :aot            :all
     :javac-options  ["-target" "1.8", "-source" "1.8"]
     :target-path    "target/%s"
-    :manifest       {
-                     "Implementation-Title"  "Firebolt Metabase driver"
-                     "Implementation-Version" version
-                     }
+    :manifest       {"Implementation-Title" "Firebolt Metabase driver"
+                     "Implementation-Version" version}
     :uberjar-name   ~(str "metabase-firebolt-driver-" version ".jar")}})
 
