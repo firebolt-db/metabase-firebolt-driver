@@ -40,6 +40,7 @@ jobs:
           passphrase: ${{ secrets.GRADLE_SIGNING_PASSWORD }}
 
       - name: "Maven deploy"
+        id: deploy
         env:
           SIGN_KEY_ID: ${{ steps.import_gpg.outputs.keyid }}
           MAVEN_REPO_USERNAME: ${{ secrets.MAVEN_REPO_USERNAME }}
@@ -61,5 +62,5 @@ jobs:
       - name: Upload resulting jar file as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.package.outputs.jar-name }}
-          path: target/uberjar/${{ steps.package.outputs.jar-name }}
+          name: ${{ steps.deploy.outputs.jar-name }}
+          path: target/${{ steps.deploy.outputs.jar-name }}
