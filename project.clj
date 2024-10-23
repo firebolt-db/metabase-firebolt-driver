@@ -58,6 +58,8 @@
                               "pom,"
                               "sign" ~(str uberjar-file ",")
                               "sign" "pom.xml,"
+                              ;; There is some internal magic that renames pom.xml.asc to xml.asc during deploy,
+                              ;; so we have to hack it
                               "shell" "mv" "pom.xml.asc" "pom.pom.asc,"
                               "deploy" "releases" "io.firebolt/firebolt.metabase-driver" ~(str version)
                               ~(str uberjar-file) "pom.xml"
