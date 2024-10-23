@@ -40,7 +40,8 @@
   :signing {:gpg-key ~(System/getenv "SIGN_KEY_ID")}
 
   :plugins [[lein-pprint "1.3.2"]
-            [lein-shell "0.5.0"]]
+            [lein-shell "0.5.0"]
+            [camechis/deploy-uberjar "0.3.0"]]
 
   :aliases {"file-name" ["with-profile" "uberjar" "pprint" "--no-pretty" "--" ":uberjar-name"]
             "project-version" ["pprint" "--no-pretty" "--" ":version"]
@@ -79,5 +80,5 @@
     :target-path   "target/%s"
     :manifest      {"Implementation-Title"   "Firebolt Metabase driver"
                     "Implementation-Version" version}
-    :uberjar-name  ~(str "metabase-firebolt-driver-" version ".jar")}})
+    :uberjar-name  ~(str "firebolt.metabase-driver-" version ".jar")}})
 
