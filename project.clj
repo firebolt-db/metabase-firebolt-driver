@@ -1,7 +1,6 @@
 (def version "3.0.6")
 (def uberjar-name (str "firebolt.metabase-driver-" version ".jar"))
-(def uberjar-provided-name (str "firebolt.metabase-driver-provided-" version ".jar"))
-(def uberjar-file (str "target/uberjar/" uberjar-name))
+(def uberjar-file (str "target/uberjar" uberjar-name))
 
 (defproject io.firebolt/firebolt.metabase-driver version
 
@@ -86,8 +85,7 @@
 
   :profiles
   {:provided
-   {:dependencies [[com.firebolt/metabase-core "1.40"]]
-    :uberjar-name ~(str uberjar-provided-name)}
+   {:dependencies [[com.firebolt/metabase-core "1.40"]]}
 
    :uberjar
    {:auto-clean    true
