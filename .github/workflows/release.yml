@@ -15,43 +15,52 @@ on:
         default: 'v0.48.0'
 
 jobs:
-  build-driver:
-    uses: ./.github/workflows/build-driver.yml
-    with:
-      metabase-version: ${{ github.event.inputs.metabase-version || 'v0.48.0' }}
-      branch: ${{ github.event.release.tag_name || github.event.inputs.tag_name }}
   publish:
     runs-on: ubuntu-latest
-    needs: [build-driver]
     steps:
-      - name: Download jar file
-        uses: actions/download-artifact@v4.1.7
+      - uses: actions/checkout@v2
         with:
-          name: ${{ needs.build-driver.outputs.jar-name }}
+          ref: ${{ github.event.release.tag_name || github.event.inputs.tag_name || 'develop' }}
+
+      - name: Install clojure tools
+        uses: DeLaGuardo/setup-clojure@3.7
+        with:
+          lein: '2.9.10'
+
+      - name: "Install dependencies"
+        run: |
+          METABASE_VERSION=${{ github.event.inputs.metabase-version || 'v0.48.0' }} lein get-metabase-core
+          lein deps
+
+      - name: Import GPG key
+        uses: crazy-max/ghaction-import-gpg@v6
+        id: import_gpg
+        with:
+          gpg_private_key: ${{ secrets.GRADLE_SIGNING_KEY }}
+          passphrase: ${{ secrets.GRADLE_SIGNING_PASSWORD }}
+
+      - name: "Maven deploy"
+        id: deploy
+        env:
+          SIGN_KEY_ID: ${{ steps.import_gpg.outputs.keyid }}
+          MAVEN_REPO_USERNAME: ${{ secrets.MAVEN_REPO_USERNAME }}
+          MAVEN_REPO_PASSWORD: ${{ secrets.MAVEN_REPO_PASSWORD }}
+        run: |
+          DEBUG=1 lein deploy
+          echo "version=$(lein project-version | tail -1)" >> "${GITHUB_OUTPUT}"
+          echo "jar-name=$(lein file-name | tail -1)" >> "${GITHUB_OUTPUT}"
+
+
       - uses: xresloader/upload-to-github-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          file: ${{ needs.build-driver.outputs.jar-name }}
+          file: target/${{ steps.deploy.outputs.jar-name }}
           tags: true
           draft: false
-      - name: maven-settings-xml-action
-        uses: whelk-io/maven-settings-xml-action@v20
+
+      - name: Upload resulting jar file as artifact
+        uses: actions/upload-artifact@v4
         with:
-          servers: >
-            [
-              {
-                "id": "firebolt",
-                "username": "${{ secrets.REPSY_USERNAME }}" ,
-                "password": "${{ secrets.REPSY_PASSWORD }}"
-              }
-            ]
-      - name: "Maven deploy"
-        run: |
-          mvn deploy:deploy-file -Durl=https://repo.repsy.io/mvn/firebolt/maven \
-                       -DgroupId=metabase \
-                       -DartifactId=firebolt-driver \
-                       -Dversion=${{ needs.build-driver.outputs.version }} \
-                       -Dpackaging=jar \
-                       -Dfile=${{ needs.build-driver.outputs.jar-name }} \
-                       -DrepositoryId=firebolt
+          name: ${{ steps.deploy.outputs.jar-name }}
+          path: target/${{ steps.deploy.outputs.jar-name }}
