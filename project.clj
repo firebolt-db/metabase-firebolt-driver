@@ -65,7 +65,8 @@
              "-Dmaven.wagon.http.pool=false"
              "-Dmaven.wagon.http.connectionManager.ttlSeconds=300"
              "-Dmaven.wagon.http.timeout=60000"
-             "-Dmaven.wagon.http.retryHandler.count=3"]
+             "-Dmaven.wagon.http.retryHandler.count=5"
+             "-X"]
 
   :profiles
   {:provided
