@@ -81,8 +81,8 @@
   ;; issue happens when we're trying to deploy from GitHub Actions
   ;; we would receive a SockedClosed exception
   :jvm-opts ["-Dmaven.wagon.http.pool=false"
-             "-Dmaven.wagon.http.connectionManager.ttlSeconds=600"
-             "-Dmaven.wagon.http.timeout=120000"
+             "-Dmaven.wagon.http.connectionManager.ttlSeconds=60000"
+             "-Dmaven.wagon.http.timeout=120000000"
              "-Dmaven.wagon.http.retryHandler.count=20"]
 
   :profiles
