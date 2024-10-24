@@ -28,8 +28,10 @@ jobs:
           lein: '2.9.10'
 
       - name: "Install dependencies"
+        env:
+          METABASE_VERSION: ${{ github.event.inputs.metabase-version || 'v0.48.0' }}
         run: |
-          METABASE_VERSION=${{ github.event.inputs.metabase-version || 'v0.48.0' }} lein get-metabase-core
+          lein get-metabase-core
           lein deps
 
       - name: Import GPG key
