@@ -53,7 +53,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          file: target/${{ steps.build.outputs.jar-name }}
+          file: target/uberjar/${{ steps.build.outputs.jar-name }}
           tags: true
           draft: false
 
@@ -61,4 +61,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.build.outputs.jar-name }}
-          path: target/${{ steps.build.outputs.jar-name }}
+          path: target/uberjar/${{ steps.build.outputs.jar-name }}
