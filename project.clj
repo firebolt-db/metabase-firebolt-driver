@@ -70,11 +70,11 @@
   :pom-plugins [[org.apache.maven.plugins/maven-source-plugin "3.2.1"
                  ;; this section is optional, values have the same syntax as pom-addition
                  {:executions ([:execution [:id "attach-sources"]
-                                [:goals ([:goal "jar"])]
+                                [:goals ([:goal "uberjar"])]
                                 [:phase "deploy"]])}]
                 [org.apache.maven.plugins/maven-javadoc-plugin "3.3.1"
                  {:executions ([:execution [:id "attach-javadocs"]
-                                [:goals ([:goal "jar"])]
+                                [:goals ([:goal "uberjar"])]
                                 [:phase "deploy"]])}]]
 
   ;; Fix issue with Azure <-> Maven communication
