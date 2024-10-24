@@ -1,6 +1,8 @@
 (def version "3.0.6")
+(def uberjar-name (str "firebolt.metabase-driver-" version ".jar"))
+(def uberjar-file (str "target/uberjar/" uberjar-name))
 
-(defproject io.firebolt/metabase-firebolt-driver version
+(defproject io.firebolt/firebolt.metabase-driver version
 
   :description "A driver for Metabase to allow connecting to Firebolt"
   :url "https://github.com/firebolt-db/metabase-firebolt-driver"
@@ -27,17 +29,7 @@
   :dependencies
   [[io.firebolt/firebolt-jdbc "3.1.0"]]
 
-  :repositories [["releases" {:sign-releases true
-                               :url "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
-                               :username :env/MAVEN_REPO_USERNAME
-                               :password :env/MAVEN_REPO_PASSWORD}]
-                 ["snapshots" {:sign-releases true
-                              :url "https://s01.oss.sonatype.org/content/repositories/snapshots/"
-                              :username :env/MAVEN_REPO_USERNAME
-                              :password :env/MAVEN_REPO_PASSWORD}]
-                 ["project" "file:repo"]]
-
-  :signing {:gpg-key ~(System/getenv "SIGN_KEY_ID")}
+  :repositories [["project" "file:repo"]]
 
   :plugins [[lein-pprint "1.3.2"]
             [lein-shell "0.5.0"]]
@@ -48,25 +40,8 @@
                                        "TMP_DIR=\\$(mktemp -d) && \\
                                        wget -nv https://downloads.metabase.com/\\$METABASE_VERSION/metabase.jar -O \\$TMP_DIR/metabase.jar && \\
                                        mkdir -p repo && \\
-                                       mvn deploy:deploy-file -Durl=file:repo -DgroupId=com.firebolt -DartifactId=metabase-core -Dversion=1.40 -Dpackaging=jar -Dfile=\\$TMP_DIR/metabase.jar"]]}
-
-  :pom-plugins [[org.apache.maven.plugins/maven-source-plugin "3.2.1"
-                 ;; this section is optional, values have the same syntax as pom-addition
-                 {:executions ([:execution [:id "attach-sources"]
-                                [:goals ([:goal "jar"])]
-                                [:phase "deploy"]])}]
-                [org.apache.maven.plugins/maven-javadoc-plugin "3.3.1"
-                 {:executions ([:execution [:id "attach-javadocs"]
-                                [:goals ([:goal "jar"])]
-                                [:phase "deploy"]])}]]
-
-  ;; Fix issue with Azure <-> Maven communication
-  ;; issue happens when we're trying to deploy from GitHub Actions
-  ;; we would receive a SockedClosed exception
-  :jvm-opts ["-Dmaven.wagon.http.pool=false"
-             "-Dmaven.wagon.http.connectionManager.ttlSeconds=300"
-             "-Dmaven.wagon.http.timeout=60000"
-             "-Dmaven.wagon.http.retryHandler.count=5"]
+                                       mvn deploy:deploy-file -Durl=file:repo -DgroupId=com.firebolt -DartifactId=metabase-core -Dversion=1.40 -Dpackaging=jar -Dfile=\\$TMP_DIR/metabase.jar"]]
+            }
 
   :profiles
   {:provided
@@ -79,5 +54,5 @@
     :target-path   "target/%s"
     :manifest      {"Implementation-Title"   "Firebolt Metabase driver"
                     "Implementation-Version" version}
-    :uberjar-name  ~(str "metabase-firebolt-driver-" version ".jar")}})
+    :uberjar-name  ~(str uberjar-name)}})
 
