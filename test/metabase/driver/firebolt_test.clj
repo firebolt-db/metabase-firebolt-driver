@@ -20,6 +20,7 @@
              [models :refer [Table, Database]]
              [sync :as sync]
              [util :as u]]
+            [metabase.driver.sql-jdbc.execute :as sql-jdbc.execute]
             [clojure.java.jdbc :as jdbc]
             [toucan2.core :as t2]
             [honeysql.core :as hsql]
