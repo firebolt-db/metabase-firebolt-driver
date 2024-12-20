@@ -124,10 +124,10 @@
 (defmethod metabase.driver.sql-jdbc.execute/read-column-thunk [:firebolt Types/ARRAY]
    [_ ^ResultSet rs _ ^Integer i]
    (fn []
-     (let [os (.getArray (.getArray rs i))] ; Corrected usage of .getArray
+     (let [os (.getArray rs i)]
        (if (nil? os)
          nil  ; Return nil if the array is null
-         (convert-array-to-string-representation (into [] os))))))
+         (convert-array-to-string-representation (.getArray os))))))
 
 ; Helpers for Date extraction
 
