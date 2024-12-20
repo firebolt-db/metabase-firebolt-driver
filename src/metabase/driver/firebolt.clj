@@ -101,6 +101,7 @@
     :timestamp     :type/DateTime
     :timestamptz   :type/DateTimeWithLocalTZ
     :varchar       :type/Text
+    :struct        :type/Text
     (keyword "timestamp with timezone")    :type/DateTime
     (keyword "timestamp without timezone") :type/DateTime})
 
@@ -108,16 +109,25 @@
 (defmethod sql-jdbc.sync/database-type->base-type :firebolt [_ database-type]
    (database-type->base-type database-type))
 
-; Concatenate the elements of an array based on array elemets type (coverting array data type to string type to apply filter on array data)
-(defn is-string-array? [os]
-  (if (= (type (first (vec os))) java.lang.String) (str "['" (clojure.string/join "','" os) "']") (str "[" (clojure.string/join "," os) "]")))
+; Convert an array into a string representation based on its type, handling nested arrays as well.
+(defn convert-array-to-string-representation [os]
+  (let [convert-element (fn [element]
+                          (if (instance? java.sql.Array element)
+                            ; Handle nested arrays by recursively calling convert-array-to-string-representation
+                            (convert-array-to-string-representation (into [] (.getArray element)))
+                            element))]
+    (if (= (type (first (vec os))) java.lang.String)
+      (str "['" (clojure.string/join "','" (map convert-element os)) "']")
+      (str "[" (clojure.string/join "," (map convert-element os)) "]"))))
 
-; Handle array data type
+; Handle array data type for Firebolt
 (defmethod metabase.driver.sql-jdbc.execute/read-column-thunk [:firebolt Types/ARRAY]
    [_ ^ResultSet rs _ ^Integer i]
    (fn []
-     (def os (object-array (.getArray (.getArray rs i))))
-     (is-string-array? os)))
+     (let [os (.getArray (.getArray rs i))] ; Corrected usage of .getArray
+       (if (nil? os)
+         nil  ; Return nil if the array is null
+         (convert-array-to-string-representation (into [] os))))))
 
 ; Helpers for Date extraction
 
