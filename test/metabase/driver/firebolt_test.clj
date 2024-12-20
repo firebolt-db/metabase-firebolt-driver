@@ -99,6 +99,7 @@
                         :timestamp     :type/DateTime
                         :timestamptz   :type/DateTimeWithLocalTZ
                         :varchar       :type/Text
+                        :struct        :type/Text
                         (keyword "timestamp with timezone")    :type/DateTime
                         (keyword "timestamp without timezone") :type/DateTime)))
 
