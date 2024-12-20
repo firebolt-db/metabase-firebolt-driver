@@ -109,16 +109,18 @@
 (defmethod sql-jdbc.sync/database-type->base-type :firebolt [_ database-type]
    (database-type->base-type database-type))
 
-; Convert an array into a string representation based on its type, handling nested arrays as well.
-(defn convert-array-to-string-representation [os]
+(defn array-to-string [os]
   (let [convert-element (fn [element]
-                          (if (instance? java.sql.Array element)
-                            ; Handle nested arrays by recursively calling convert-array-to-string-representation
-                            (convert-array-to-string-representation (into [] (.getArray element)))
-                            element))]
-    (if (= (type (first (vec os))) java.lang.String)
-      (str "['" (clojure.string/join "','" (map convert-element os)) "']")
-      (str "[" (clojure.string/join "," (map convert-element os)) "]"))))
+  (do (log/info "Class: " (.getName (.getClass element)) "is array" (.isArray (class element)))
+                          (cond
+                            (.isArray (class element))
+                            (array-to-string (into [] element)) ; Handle nested arrays
+                            (instance? java.sql.Timestamp element)
+                            (.format (java.text.SimpleDateFormat. "yyyy-MM-dd HH:mm:ss") element)
+                            (instance? java.lang.String element)
+                            (str "'" element "'")
+                            :else (.toString element))))]
+    (str "[" (clojure.string/join "," (map convert-element os)) "]")))
 
 ; Handle array data type for Firebolt
 (defmethod metabase.driver.sql-jdbc.execute/read-column-thunk [:firebolt Types/ARRAY]
@@ -127,7 +129,7 @@
      (let [os (.getArray rs i)]
        (if (nil? os)
          nil  ; Return nil if the array is null
-         (convert-array-to-string-representation (.getArray os))))))
+         (array-to-string (into [] (.getArray os)))))))
 
 ; Helpers for Date extraction
 
