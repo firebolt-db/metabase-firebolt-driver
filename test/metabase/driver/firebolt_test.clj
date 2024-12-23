@@ -246,28 +246,6 @@
                                              (filter (has-value :name "example_view") (map (partial into {})
                                                                                            (t2/select [Table :name] :db_id (u/the-id database))))))))))))
 
-; test that this method works
-; (defn array-to-string [os]
-;    (let [convert-element (fn [element]
-;    (do (log/info "Class: " (.getName (.getClass element)) "is array" (.isArray (class element)))
-;                            (cond
-;                              (.isArray (class element))
-;                              (array-to-string (into [] element)) ; Handle nested arrays
-;                              (instance? java.sql.Timestamp element)
-;                              (.format (java.text.SimpleDateFormat. "yyyy-MM-dd HH:mm:ss") element)
-;                              (instance? java.lang.String element)
-;                              (str "'" element "'")
-;                              :else (.toString element))))]
-;      (str "[" (clojure.string/join "," (map convert-element os)) "]")))
-;
-;  ; Handle array data type for Firebolt
-;  (defmethod metabase.driver.sql-jdbc.execute/read-column-thunk [:firebolt Types/ARRAY]
-;     [_ ^ResultSet rs _ ^Integer i]
-;     (fn []
-;       (let [os (.getArray rs i)]
-;         (if (nil? os)
-;           nil  ; Return nil if the array is null
-;           (array-to-string (into [] (.getArray os)))))))
 (deftest array-to-string-test
     (mt/test-driver :firebolt
         (testing "array-to-string"
