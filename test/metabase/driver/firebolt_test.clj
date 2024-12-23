@@ -25,7 +25,8 @@
             [toucan2.core :as t2]
             [honeysql.core :as hsql]
     )
-  (:import [java.time LocalTime ZonedDateTime]))
+  (:import [java.sql Types ResultSet Array]
+    [java.time LocalTime ZonedDateTime]))
 
 ; TEST - Connection details specification
 (deftest connection-details->spec-test
@@ -258,7 +259,7 @@
 ;                              (str "'" element "'")
 ;                              :else (.toString element))))]
 ;      (str "[" (clojure.string/join "," (map convert-element os)) "]")))
-;  
+;
 ;  ; Handle array data type for Firebolt
 ;  (defmethod metabase.driver.sql-jdbc.execute/read-column-thunk [:firebolt Types/ARRAY]
 ;     [_ ^ResultSet rs _ ^Integer i]
