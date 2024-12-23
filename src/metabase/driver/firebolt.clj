@@ -112,6 +112,7 @@
 (defn array-to-string [os]
       (let [convert-element (fn [element]
                           (cond
+                            (nil? element) "null"
                             (.isArray (class element))
                             (array-to-string (into [] element)) ; Handle nested arrays
                             (instance? java.sql.Timestamp element)

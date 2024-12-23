@@ -290,4 +290,8 @@
             (let [result-set (mock-result-set {1 nil})]
               (let [read-thunk (metabase.driver.sql-jdbc.execute/read-column-thunk :firebolt result-set array-meta 1)]
                 (is (= nil (read-thunk))))))
+          (testing "Read Firebolt ARRAY column with null elements"
+            (let [result-set (mock-result-set {1 (into-array Object [nil])})]
+              (let [read-thunk (metabase.driver.sql-jdbc.execute/read-column-thunk :firebolt result-set array-meta 1)]
+                (is (= "[null]" (read-thunk))))))
 ))
