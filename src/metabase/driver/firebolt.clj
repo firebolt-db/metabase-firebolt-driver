@@ -110,8 +110,7 @@
    (database-type->base-type database-type))
 
 (defn array-to-string [os]
-  (let [convert-element (fn [element]
-  (do (log/info "Class: " (.getName (.getClass element)) "is array" (.isArray (class element)))
+      (let [convert-element (fn [element]
                           (cond
                             (.isArray (class element))
                             (array-to-string (into [] element)) ; Handle nested arrays
@@ -119,7 +118,7 @@
                             (.format (java.text.SimpleDateFormat. "yyyy-MM-dd HH:mm:ss") element)
                             (instance? java.lang.String element)
                             (str "'" element "'")
-                            :else (.toString element))))]
+                            :else (.toString element)))]
     (str "[" (clojure.string/join "," (map convert-element os)) "]")))
 
 ; Handle array data type for Firebolt
@@ -128,7 +127,7 @@
    (fn []
      (let [os (.getArray rs i)]
        (if (nil? os)
-         nil  ; Return nil if the array is null
+         nil
          (array-to-string (into [] (.getArray os)))))))
 
 ; Helpers for Date extraction
