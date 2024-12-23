@@ -20,11 +20,13 @@
              [models :refer [Table, Database]]
              [sync :as sync]
              [util :as u]]
+            [metabase.driver.sql-jdbc.execute :as sql-jdbc.execute]
             [clojure.java.jdbc :as jdbc]
             [toucan2.core :as t2]
             [honeysql.core :as hsql]
     )
-  (:import [java.time LocalTime ZonedDateTime]))
+  (:import [java.sql Array ResultSet ResultSetMetaData Types Timestamp]
+    [java.time LocalTime ZonedDateTime]))
 
 ; TEST - Connection details specification
 (deftest connection-details->spec-test
@@ -99,6 +101,7 @@
                         :timestamp     :type/DateTime
                         :timestamptz   :type/DateTimeWithLocalTZ
                         :varchar       :type/Text
+                        :struct        :type/Text
                         (keyword "timestamp with timezone")    :type/DateTime
                         (keyword "timestamp without timezone") :type/DateTime)))
 
@@ -242,3 +245,53 @@
                                       (is (= [{:name "example_view"}]
                                              (filter (has-value :name "example_view") (map (partial into {})
                                                                                            (t2/select [Table :name] :db_id (u/the-id database))))))))))))
+
+;; Create a mock ResultSet
+(defn mock-result-set [data]
+  (let [get-array (fn [column-index]
+                    (let [data-entry (get data column-index)]
+                    (when data-entry (proxy [Array] []
+                      (getArray [] (into-array Object data-entry))))))]
+  (reify ResultSet
+    (^Array getArray [_this ^int columnIndex]
+      (get-array columnIndex))  ;; Return the corresponding value for the column index
+
+    (getObject [_this ^int columnIndex]
+      (get data columnIndex))
+    )))
+
+
+(deftest test-read-column-thunk
+  (let [array-meta (proxy [ResultSetMetaData] [] (getColumnType [_] Types/ARRAY))]
+   (testing "Read Firebolt ARRAY column (int elements)"
+    (let [result-set (mock-result-set {1 (into-array Integer/TYPE [1 2 3])})]
+      (let [read-thunk (metabase.driver.sql-jdbc.execute/read-column-thunk :firebolt result-set array-meta 1)]
+        (is (= "[1,2,3]" (read-thunk))))))
+
+    (testing "Read Firebolt ARRAY column (string elements)"
+      (let [result-set (mock-result-set {1 (into-array String ["a" "b" "c"])})]
+        (let [read-thunk (metabase.driver.sql-jdbc.execute/read-column-thunk :firebolt result-set array-meta 1)]
+          (is (= "['a','b','c']" (read-thunk))))))
+
+      (testing "Read Firebolt ARRAY column (Timestamp elements)"
+        (let [timestamp (Timestamp. (System/currentTimeMillis))
+              timestamp-string (.format (java.text.SimpleDateFormat. "yyyy-MM-dd HH:mm:ss") timestamp)]
+          (let [result-set (mock-result-set {1 (into-array Timestamp [timestamp])})]
+            (let [read-thunk (metabase.driver.sql-jdbc.execute/read-column-thunk :firebolt result-set array-meta 1)]
+              (is (= (str "[" timestamp-string "]") (read-thunk)))))))
+
+        (testing "Read Firebolt ARRAY column with nested arrays"
+          (let [nested-arr (into-array Object [(into-array Integer/TYPE [1 2]) (into-array String ["a" "b"])])]
+            (let [result-set (mock-result-set {1 nested-arr})]
+              (let [read-thunk (metabase.driver.sql-jdbc.execute/read-column-thunk :firebolt result-set array-meta 1)]
+                (is (= "[[1,2],['a','b']]" (read-thunk)))))))
+
+          (testing "Read Firebolt ARRAY column (null value)"
+            (let [result-set (mock-result-set {1 nil})]
+              (let [read-thunk (metabase.driver.sql-jdbc.execute/read-column-thunk :firebolt result-set array-meta 1)]
+                (is (= nil (read-thunk))))))
+          (testing "Read Firebolt ARRAY column with null elements"
+            (let [result-set (mock-result-set {1 (into-array Object [nil])})]
+              (let [read-thunk (metabase.driver.sql-jdbc.execute/read-column-thunk :firebolt result-set array-meta 1)]
+                (is (= "[null]" (read-thunk))))))
+))
