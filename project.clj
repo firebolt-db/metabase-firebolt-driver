@@ -1,4 +1,4 @@
-(def version "3.1.0")
+(def version "3.2.0")
 (def uberjar-name (str "firebolt.metabase-driver-" version ".jar"))
 (def uberjar-file (str "target/uberjar/" uberjar-name))
 
@@ -27,7 +27,7 @@
                   ])
 
   :dependencies
-  [[io.firebolt/firebolt-jdbc "3.2.0"]]
+  [[io.firebolt/firebolt-jdbc "3.1.0"]]
 
   :repositories [["project" "file:repo"]]
 
@@ -40,12 +40,12 @@
                                        "TMP_DIR=\\$(mktemp -d) && \\
                                        wget -nv https://downloads.metabase.com/\\$METABASE_VERSION/metabase.jar -O \\$TMP_DIR/metabase.jar && \\
                                        mkdir -p repo && \\
-                                       mvn deploy:deploy-file -Durl=file:repo -DgroupId=com.firebolt -DartifactId=metabase-core -Dversion=1.40 -Dpackaging=jar -Dfile=\\$TMP_DIR/metabase.jar"]]
+                                       mvn deploy:deploy-file -Durl=file:repo -DgroupId=com.firebolt -DartifactId=metabase-core -Dversion=1.50 -Dpackaging=jar -Dfile=\\$TMP_DIR/metabase.jar"]]
             }
 
   :profiles
   {:provided
-   {:dependencies [[com.firebolt/metabase-core "1.40"]]}
+   {:dependencies [[com.firebolt/metabase-core "1.50"]]}
 
    :uberjar
    {:auto-clean    true

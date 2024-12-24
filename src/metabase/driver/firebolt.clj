@@ -5,7 +5,6 @@
             [clojure.java.jdbc :as jdbc]
             [java-time.api :as t]
             [metabase.driver :as driver]
-            [metabase.driver.common :as driver.common]
             [metabase.driver.sql-jdbc.sync.describe-table :as sql-jdbc.describe-table]
             [metabase.driver.sql-jdbc
              [common :as sql-jdbc.common]
@@ -176,7 +175,7 @@
 (defmethod sql.qp/add-interval-honeysql-form :firebolt [_ dt amount unit] [[:date_add (name unit) (int amount) dt]])
 
 ; Format a temporal value `t` as a SQL-style literal string, converting time datatype to SQL-style literal string
-(defmethod unprepare/unprrepare-value [:firebolt LocalTime]
+(defmethod sql.qp/inline-value [:firebolt LocalTime]
   [_ t]
   (format "timestamp '%s'" (t/sql-timestamp t)))
 
