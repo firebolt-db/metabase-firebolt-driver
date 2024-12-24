@@ -12,7 +12,6 @@
              [connection :as sql-jdbc.conn]
              [sync :as sql-jdbc.sync]]
             [metabase.driver.sql-jdbc.execute.legacy-impl :as legacy]
-            [metabase.driver.sql.util.unprepare :as unprepare]
             [metabase.driver.sql.query-processor :as sql.qp]
             [metabase.driver.sql-jdbc.execute :as sql-jdbc.execute]
             [metabase.util
@@ -177,22 +176,22 @@
 (defmethod sql.qp/add-interval-honeysql-form :firebolt [_ dt amount unit] [[:date_add (name unit) (int amount) dt]])
 
 ; Format a temporal value `t` as a SQL-style literal string, converting time datatype to SQL-style literal string
-(defmethod unprepare/unprepare-value [:firebolt LocalTime]
+(defmethod unprepare/unprrepare-value [:firebolt LocalTime]
   [_ t]
   (format "timestamp '%s'" (t/sql-timestamp t)))
 
 ; Converting ZonedDateTime datatype to SQL-style literal string
-(defmethod unprepare/unprepare-value [:firebolt ZonedDateTime]
+(defmethod sql.qp/inline-value [:firebolt ZonedDateTime]
   [_ t]
   (format "timestamptz '%s'" (u.date/format-sql (t/offset-date-time t))))
 
 ; Converting OffsetDateTime datatype to SQL-style literal string
-(defmethod unprepare/unprepare-value [:firebolt OffsetDateTime]
+(defmethod sql.qp/inline-value [:firebolt OffsetDateTime]
   [_ t]
   (format "timestamptz '%s'" (u.date/format-sql (t/offset-date-time t))))
 
 ; Converting OffsetTime datatype to SQL-style literal string
-(defmethod unprepare/unprepare-value [:firebolt OffsetTime]
+(defmethod sql.qp/inline-value [:firebolt OffsetTime]
   [_ t]
   (format "timestamptz '%s'" (u.date/format-sql (t/offset-date-time t))))
 
@@ -293,17 +292,25 @@
   )
 
 ;-------------------------Supported features---------------------------
-(doseq [[feature supported?] {:basic-aggregations                    true
-                             :expression-aggregations                true
-                             :foreign-keys                           false
-                             :binning                                false
-                             :regex                                  true
-                             :standard-deviation-aggregations        false
-                             :nested-queries                         false
-                             :case-sensitivity-string-filter-options false
-                             :set-timezone                           true
-                             :nested-fields                          false
-                             :advanced-math-expressions              false
-                             :percentile-aggregations                false
-                             :schemas                                false}]
-(defmethod driver/database-supports? [:firebolt feature] [_driver _feature _db] supported?))
+(doseq [[feature supported?] {:basic-aggregations                     true
+                              :expression-aggregations                true
+                              :foreign-keys                           false
+                              :binning                                false
+                              :regex                                  true
+                              :standard-deviation-aggregations        false
+                              :nested-queries                         false
+                              :case-sensitivity-string-filter-options false
+                              :set-timezone                           true
+                              :nested-fields                          false
+                              :advanced-math-expressions              false
+                              :percentile-aggregations                false
+                              :schemas                                false
+                              :uploads                                false
+                              :index-info                             false ;TODO: Implement index-info
+                              :table-privileges                       false ;TODO: Implement table-privileges
+                              :describe-fields                        false ;TODO: Implement describe-fields
+                              :metadata/key-constraints               false ; If foreign keys are enforced.
+                              :identifiers-with-spaces                true
+
+                              }]
+  (defmethod driver/database-supports? [:firebolt feature] [_driver _feature _db] supported?))
