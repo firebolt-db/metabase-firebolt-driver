@@ -15,7 +15,6 @@
             [metabase.test.data.interface :as tx]
             [metabase.test.data.dataset-definitions :as dataset-defs]
             [clojure.string :as str]
-            [metabase.driver.sql.util.unprepare :as unprepare]
             [metabase
              [models :refer [Table, Database]]
              [sync :as sync]
@@ -23,7 +22,6 @@
             [metabase.driver.sql-jdbc.execute :as sql-jdbc.execute]
             [clojure.java.jdbc :as jdbc]
             [toucan2.core :as t2]
-            [honeysql.core :as hsql]
     )
   (:import [java.sql Array ResultSet ResultSetMetaData Types Timestamp]
     [java.time LocalTime ZonedDateTime]))
@@ -132,14 +130,14 @@
          (sql.qp/date :firebolt :day-of-month "2021-06-06 12:12:12")))
   (is (= [[:extract [:raw "doy" " FROM " [:cast "2021-06-06 12:12:12" :timestamptz]]]]
          (sql.qp/date :firebolt :day-of-year "2021-06-06 12:12:12")))
-  (is (= (hsql/call :ceil
-           (hsql/call :/
+  (is (= [:ceil
+           [:/
              [[:extract [:raw "doy" " FROM " [:cast
                  [[:date_add "day" -1
                    [[:date_trunc [:metabase.util.honey-sql-2/literal "week"]
                      [:cast [[:date_add "day" 1 "2021-06-06 12:12:12"]] :timestamptz]]]]]
                  :timestamptz]]]]
-             7.0))
+             7.0]]
          (sql.qp/date :firebolt :week-of-year "2021-06-06 12:12:12")))
   (is (= [[:extract [:raw "month" " FROM " [:cast "2021-06-06 12:12:12" :timestamptz]]]]
          (sql.qp/date :firebolt :month-of-year "2021-06-06 12:12:12")))
@@ -155,12 +153,12 @@
 ;  (is (= "SELECT CAST(CAST(NOW() AS TIMESTAMP) AS VARCHAR(24))"
 ;     (driver.common/current-db-time-native-query :firebolt))))
 
-(deftest unprepare-values-test
+(deftest inline-values-test
   (is (= "class java.time.LocalTime"
-     (unprepare/unprepare-value :firebolt LocalTime)))
+     (sql.qp/inline-value :firebolt LocalTime)))
 
   (is (= "class java.time.ZonedDateTime"
-     (unprepare/unprepare-value :firebolt ZonedDateTime))))
+     (sql.qp/inline-value :firebolt ZonedDateTime))))
 
 (deftest driver-support-test
   (is (= false
