@@ -9,7 +9,7 @@
 
 ### Get the driver
 Download the latest driver jar from the [releases page](https://github.com/firebolt-db/metabase-firebolt-driver/releases). Make sure to check the [compatibility matrix](#compatibility-matrix) to get the right version.
-or
+**or**
 Build the driver from source as described in the [Build from source](#build-from-source) section.
 
 ### Run Metabase locally
