@@ -27,7 +27,7 @@
                   ])
 
   :dependencies
-  [[io.firebolt/firebolt-jdbc "3.1.0"]]
+  [[io.firebolt/firebolt-jdbc "3.2.0"]]
 
   :repositories [["project" "file:repo"]]
 
