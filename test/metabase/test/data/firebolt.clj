@@ -101,8 +101,8 @@
 (defmethod sql.tx/add-fk-sql :firebolt [& _] nil)
 
 ; loads data by adding ids
-(defmethod load-data/load-data! :firebolt [& args]
-  (apply load-data/load-data-add-ids! args))
+(defmethod load-data/row-xform :firebolt [& args]
+  (apply load-data/add-ids-xform args))
 
 ; Modified the table name to be in the format of db_name_table_name.
 ; So get the table and view names to make all test cases to use this format while forming the query to run tests

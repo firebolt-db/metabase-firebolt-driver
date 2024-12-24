@@ -1,19 +1,35 @@
 # Metabase Firebolt Driver
 
+[Firebolt documentation page](https://docs.firebolt.io/Guides/integrations/metabase.html)
+
+## Overview
+
+
 ## Installation
 
-Please follow Firebolt's [documentation](https://docs.firebolt.io/integrations/business-intelligence/connecting-to-metabase.html) to install the Metabase Firebolt driver on your Metabase instance. If you are using Metabase Cloud, no installation is required since the driver comes preinstalled.
+### Get the driver
+Download the latest driver jar from the [releases page](https://github.com/firebolt-db/metabase-firebolt-driver/releases). Make sure to check the [compatibility matrix](#compatibility-matrix) to get the right version.
+**or**
+Build the driver from source as described in the [Build from source](#build-from-source) section.
 
-## Configuring
+### Run Metabase locally
+1. Download the `metabase.jar` file from [Metabase download page](https://www.metabase.com/start/oss/jar).
+2. Run Metabase first time. It will generate all the required files and directories, including the `/plugins` directory.
+```shell
+   java -jar metabase.jar
+   ```
+3. Stop Metabase.
+4. Copy the Firebolt driver jar to the Metabase `/plugins` directory
+5. Start Metabase again. Firebolt connection should be available in the list of databases now.
 
-1. Once you've started up Metabase, open http://localhost:3000 , go to add a database and select "Firebolt".
-2. You'll need to provide the Database Name, Username and Password.
+
+## Build from source
 
 ### Prerequisites
 
 - [Leiningen](https://leiningen.org/)
 
-### Build from source
+### Steps
 
 1. Clone and build metabase dependency jar.
 
@@ -49,23 +65,12 @@ Please follow Firebolt's [documentation](https://docs.firebolt.io/integrations/b
    LEIN_SNAPSHOTS_IN_RELEASE=true DEBUG=1 lein uberjar
    ```
 
-5. Let's assume we download `metabase.jar` from the [Metabase jar](https://www.metabase.com/docs/latest/operations-guide/running-the-metabase-jar-file.html) to `~/metabase/` and we built the project above. Copy the built jar to the Metabase plugins directly and run Metabase from there!
-
-   ```shell
-   cd ~/metabase/
-   java -jar metabase.jar
-   ```
-
-You should see a message on startup similar to:
-
-```
-2019-05-07 23:27:32 INFO plugins.lazy-loaded-driver :: Registering lazy loading driver :firebolt...
-2019-05-07 23:27:32 INFO metabase.driver :: Registered driver :firebolt (parents: #{:sql-jdbc}) 🚚
-```
+5. The jar will be available in the `target` directory.
 
 ## Compatibility matrix
 
-| Metabase Release | Driver Version |
-|------------------|----------------|
-| <=0.47.x         | 3.0.1          |
-| \>=0.48.x        | 3.1.0          |
+| Metabase Release | Driver Version | Firebolt Version |
+|------------------|----------------|------------------|
+| <=0.47.x         | 3.0.1          | 1.0              |
+| \>=0.48.x        | 3.1.0          | 1.0 and 2.0      |
+| >=0.52           | 3.2.0          | 2.0              |
