@@ -294,7 +294,6 @@
 ;-------------------------Supported features---------------------------
 (doseq [[feature supported?] {:basic-aggregations                     true
                               :expression-aggregations                true
-                              :foreign-keys                           false
                               :binning                                false
                               :regex                                  true
                               :standard-deviation-aggregations        false
@@ -311,6 +310,6 @@
                               :describe-fields                        false ;TODO: Implement describe-fields
                               :metadata/key-constraints               false ; If foreign keys are enforced.
                               :identifiers-with-spaces                true
-
+                              :describe-indexes                       false ;TODO: Implement describe-indexes
                               }]
   (defmethod driver/database-supports? [:firebolt feature] [_driver _feature _db] supported?))
