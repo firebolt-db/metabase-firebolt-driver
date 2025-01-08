@@ -310,5 +310,6 @@
                               :metadata/key-constraints               false ; If foreign keys are enforced.
                               :identifiers-with-spaces                true
                               :describe-indexes                       false ;TODO: Implement describe-indexes
+                              :test/time-type                         false
                               }]
   (defmethod driver/database-supports? [:firebolt feature] [_driver _feature _db] supported?))
