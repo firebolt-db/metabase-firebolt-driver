@@ -16,7 +16,6 @@
             [metabase.test.data.dataset-definitions :as dataset-defs]
             [clojure.string :as str]
             [metabase
-             [models :refer [Table, Database]]
              [sync :as sync]
              [util :as u]]
             [metabase.driver.sql-jdbc.execute :as sql-jdbc.execute]
@@ -232,7 +231,7 @@
                     (let [details (mt/dbdef->connection-details :firebolt :db {:database-name  (tx/db-test-env-var-or-throw :firebolt :db)})
                           spec    (sql-jdbc.conn/connection-details->spec :firebolt details)]
                       ;; create the DB object
-                      (mt/with-temp [Database database {:engine :firebolt, :details (assoc details :db (tx/db-test-env-var-or-throw :firebolt :db))}]
+                      (mt/with-temp [:model/Database database {:engine :firebolt, :details (assoc details :db (tx/db-test-env-var-or-throw :firebolt :db))}]
                                     (let [sync! #(sync/sync-database! database)]
                                       ;; create a view
                                       (jdbc/execute! spec ["DROP VIEW IF EXISTS \"example_view\""])
@@ -242,7 +241,7 @@
                                       ;; now take a look at the Tables in the database, there should be an entry for the view
                                       (is (= [{:name "example_view"}]
                                              (filter (has-value :name "example_view") (map (partial into {})
-                                                                                           (t2/select [Table :name] :db_id (u/the-id database))))))))))))
+                                                                                           (t2/select [:model/Table :name] :db_id (u/the-id database))))))))))))
 
 ;; Create a mock ResultSet
 (defn mock-result-set [data]
