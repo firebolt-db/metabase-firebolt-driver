@@ -1,4 +1,4 @@
-(def version "3.2.1")
+(def version "3.2.2")
 (def uberjar-name (str "firebolt.metabase-driver-" version ".jar"))
 (def uberjar-file (str "target/uberjar/" uberjar-name))
 
