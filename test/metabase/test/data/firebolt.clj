@@ -32,7 +32,7 @@
   (merge {:user               (tx/db-test-env-var-or-throw :firebolt :user)
           :password           (tx/db-test-env-var-or-throw :firebolt :password)
           :db                 (tx/db-test-env-var-or-throw :firebolt :db)
-          :additional-options (tx/db-test-env-var-or-throw :firebolt :additional-options)}))
+          :additional-options (tx/db-test-env-var :firebolt :additional-options "")}))
 ;;; ----------------------------------------------- Sync -----------------------------------------------
 
 ; Map firebolt data types to base type
