@@ -257,7 +257,6 @@
       (get data columnIndex))
     )))
 
-
 (deftest test-read-column-thunk
   (let [array-meta (proxy [ResultSetMetaData] [] (getColumnType [_] Types/ARRAY))]
    (testing "Read Firebolt ARRAY column (int elements)"

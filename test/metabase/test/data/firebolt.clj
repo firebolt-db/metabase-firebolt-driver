@@ -4,6 +4,7 @@
              [sql-jdbc :as sql-jdbc.tx]
              [interface :as tx]]
             [clojure.set :as set]
+            [clojure.string :as str]
             [metabase
              [config :as config]
              [driver :as driver]]
@@ -79,20 +80,22 @@
 
 ; Customize the create table to create DIMENSION TABLE
 (defmethod sql.tx/create-table-sql :firebolt
-  [driver {:keys [database-name], :as dbdef} {:keys [table-name field-definitions]}]
+  [driver {:keys [database-name], :as _dbdef} {:keys [table-name field-definitions]}]
   (let [quote-name    #(sql.u/quote-name driver :field (ddl.i/format-name driver %))
-        pk-field-name (quote-name (sql.tx/pk-field-name driver))]
+        pk-field-name (sql.tx/pk-field-name driver)]
     (format "CREATE DIMENSION TABLE %s (%s %s, %s) PRIMARY INDEX %s"
             (sql.tx/qualify-and-quote driver database-name table-name)
-            pk-field-name (sql.tx/pk-sql-type driver)
-            (->> field-definitions
-                 (map (fn [{:keys [field-name base-type]}]
-                        (format "%s %s NULL" (quote-name field-name) (if (map? base-type)
-                                                                  (:native base-type)
-                                                                  (sql.tx/field-base-type->sql-type driver base-type)))))
-                 (interpose ", ")
-                 (apply str))
-            pk-field-name)))
+            (quote-name pk-field-name)
+            (sql.tx/pk-sql-type driver)
+            (str/join ", "
+                      (for [{:keys [field-name base-type]} field-definitions
+                            :when (not= field-name pk-field-name)]
+                        (format "%s %s NULL"
+                                (quote-name field-name)
+                                (if (map? base-type)
+                                  (:native base-type)
+                                  (sql.tx/field-base-type->sql-type driver base-type)))))
+            (quote-name pk-field-name))))
 
 ; Implement this to set the type of primary key field
 (defmethod sql.tx/pk-sql-type :firebolt [_] "int")
@@ -101,8 +104,8 @@
 (defmethod sql.tx/add-fk-sql :firebolt [& _] nil)
 
 ; loads data by adding ids
-(defmethod load-data/row-xform :firebolt [& args]
-  (apply load-data/add-ids-xform args))
+(defmethod load-data/row-xform :firebolt [_driver _dbdef tabledef]
+  (load-data/maybe-add-ids-xform tabledef))
 
 ; Modified the table name to be in the format of db_name_table_name.
 ; So get the table and view names to make all test cases to use this format while forming the query to run tests
@@ -118,11 +121,10 @@
             {:name table_name :schema (when (seq database) database)}))))}))
 
 ; Fix NaN issue in the integration test case -- Need to return null where firebolt returns NaN
-(defmethod sql-jdbc.execute/read-column-thunk :firebolt
+#_(defmethod sql-jdbc.execute/read-column-thunk :firebolt
   [_ ^ResultSet rs _ ^Integer i]
   (fn []
     (let [obj (.getObject rs i)]
       (if (= "NaN" (str obj)) nil obj))))
 
 (defmethod tx/sorts-nil-first? :firebolt [_ _] false)
-
