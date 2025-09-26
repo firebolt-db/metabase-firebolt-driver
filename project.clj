@@ -45,7 +45,7 @@
 
   :profiles
   {:provided
-   {:dependencies [[com.firebolt/metabase-core "1.50"]]}
+   {:dependencies [[com.firebolt/metabase-core "1.56"]]}
 
    :uberjar
    {:auto-clean    true
