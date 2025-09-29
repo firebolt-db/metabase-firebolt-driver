@@ -37,6 +37,10 @@ jobs:
           cli: '1.11.1.1155' # Clojure CLI based on tools.deps
           lein: '2.9.10'     # or use 'latest' to always provision latest version of leiningen
 
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
       - name: Add firebolt driver imports to metabase
         shell: bash
         run: |
