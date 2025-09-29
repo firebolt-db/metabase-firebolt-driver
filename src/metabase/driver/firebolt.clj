@@ -1,7 +1,6 @@
 (ns metabase.driver.firebolt
   (:require [clojure
-             [string :as str]
-             [set :as set]]
+             [string :as str]]
             [clojure.java.jdbc :as jdbc]
             [java-time.api :as t]
             [metabase.driver :as driver]
@@ -13,10 +12,10 @@
             [metabase.driver.sql-jdbc.execute.legacy-impl :as legacy]
             [metabase.driver.sql.query-processor :as sql.qp]
             [metabase.driver.sql-jdbc.execute :as sql-jdbc.execute]
+            [metabase.driver.sql-jdbc.connection.ssh-tunnel :as ssh]
             [metabase.util
              [i18n :as i18n]
              [date-2 :as u.date]
-             [ssh :as ssh]
              [log :as log]]
              [metabase.util.honey-sql-2 :as h2x])
   (:import [java.sql Types Connection ResultSet]
