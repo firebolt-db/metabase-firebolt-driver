@@ -56,7 +56,7 @@ Build the driver from source as described in the [Build from source](#build-from
    cp ../../target/uberjar/metabase.jar metabase-firebolt-driver/
    cd metabase-firebolt-driver
    mkdir repo
-   mvn deploy:deploy-file -Durl=file:repo -DgroupId=com.firebolt -DartifactId=metabase-core -Dversion=1.40 -Dpackaging=jar -Dfile=metabase.jar
+   mvn deploy:deploy-file -Durl=file:repo -DgroupId=com.firebolt -DartifactId=metabase-core -Dversion=1.56 -Dpackaging=jar -Dfile=metabase.jar
    ```
 
 4. Build the jar
@@ -74,3 +74,4 @@ Build the driver from source as described in the [Build from source](#build-from
 | <=0.47.x         | 3.0.1          | 1.0              |
 | \>=0.48.x        | 3.1.0          | 1.0 and 2.0      |
 | >=0.52           | 3.2.0          | 2.0              |
+| >=0.55           | 3.2.3          | 2.0              |

@@ -40,7 +40,7 @@
                                        "TMP_DIR=\\$(mktemp -d) && \\
                                        wget -nv https://downloads.metabase.com/\\$METABASE_VERSION/metabase.jar -O \\$TMP_DIR/metabase.jar && \\
                                        mkdir -p repo && \\
-                                       mvn deploy:deploy-file -Durl=file:repo -DgroupId=com.firebolt -DartifactId=metabase-core -Dversion=1.50 -Dpackaging=jar -Dfile=\\$TMP_DIR/metabase.jar"]]
+                                       mvn deploy:deploy-file -Durl=file:repo -DgroupId=com.firebolt -DartifactId=metabase-core -Dversion=1.56 -Dpackaging=jar -Dfile=\\$TMP_DIR/metabase.jar"]]
             }
 
   :profiles
