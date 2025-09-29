@@ -6,8 +6,8 @@
             [clojure.set :as set]
             [clojure.string :as str]
             [metabase
-             [config :as config]
              [driver :as driver]]
+            [metabase.config.core :as config]
             [metabase.driver.ddl.interface :as ddl.i]
             [metabase.driver.sql-jdbc.connection :as sql-jdbc.conn]
             [metabase.test.data.sql-jdbc

@@ -41,6 +41,7 @@
         spec {
               :classname "com.firebolt.FireboltDriver",
               :subprotocol "firebolt",
+              :product_name "metabase/1.56.6"
               :subname (str "//api." env ".firebolt.io/" db),
         }
         ]
