@@ -71,8 +71,9 @@
 
 ; Testing the firebolt database connection
 (defmethod driver/can-connect? :firebolt [driver details]
-   (let [connection (sql-jdbc.conn/connection-details->spec driver (ssh/with-ssh-tunnel details))]
-     (= 1 (first (vals (first (jdbc/query connection ["SELECT 1"])))))))
+  (ssh/with-ssh-tunnel [details-with-tunnel details]
+    (let [connection (sql-jdbc.conn/connection-details->spec driver details-with-tunnel)]
+      (= 1 (first (vals (first (jdbc/query connection ["SELECT 1"]))))))))
 
 (defmethod driver/db-default-timezone :firebolt [_ _]  "UTC" ) ; possible parameters db-default-timezone
 
