@@ -12,12 +12,14 @@ on:
 jobs:
   run-integration-tests:
     runs-on: ubuntu-latest
+    env:
+      MB_VERSION: "v0.56.5"
     steps:
       - name: "Checkout Metabase Code"
         uses: actions/checkout@v2
         with:
           repository: metabase/metabase
-          ref: "v0.56.5"
+          ref: ${{ env.MB_VERSION }}
 
       - name: Checkout firebolt connector code
         uses: actions/checkout@v2
@@ -57,6 +59,9 @@ jobs:
           cd modules/drivers
           clojure -X:deps prep
           cd ../..
+
+      - name: Create version.properties file
+        run: echo -e "tag=${{ env.MB_VERSION }}\nhash=dev\ndate=$(date +'%Y-%m-%d')" > resources/version.properties
 
       - name: Setup database and engine
         id: setup
