@@ -16,8 +16,8 @@
             [metabase.test.data.dataset-definitions :as dataset-defs]
             [clojure.string :as str]
             [metabase
-             [sync :as sync]
              [util :as u]]
+            [metabase.sync.core :as sync]
             [metabase.driver.sql-jdbc.execute :as sql-jdbc.execute]
             [clojure.java.jdbc :as jdbc]
             [toucan2.core :as t2]
