@@ -12,7 +12,6 @@ on:
         description: 'Metabase version'
         required: false
         type: string
-        default: 'v0.52.4'
 
 jobs:
   publish:
@@ -29,7 +28,7 @@ jobs:
 
       - name: "Install dependencies"
         env:
-          METABASE_VERSION: ${{ github.event.inputs.metabase-version || 'v0.52.4' }}
+          METABASE_VERSION: ${{ github.event.inputs.metabase-version || vars.METABASE_VERSION }}
         run: |
           lein get-metabase-core
           lein deps
