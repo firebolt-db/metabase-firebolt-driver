@@ -17,7 +17,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: metabase/metabase
-          ref: "v0.48.0"
+          ref: ${{ vars.METABASE_VERSION }}
 
       - name: Checkout firebolt connector code
         uses: actions/checkout@v2
@@ -28,7 +28,7 @@ jobs:
         uses: actions/setup-java@v2
         with:
           distribution: 'zulu'
-          java-version: '17'
+          java-version: '21'
 
       - name: Install clojure tools
         uses: DeLaGuardo/setup-clojure@3.7
@@ -36,6 +36,10 @@ jobs:
           # Install just one or all simultaneously
           cli: '1.11.1.1155' # Clojure CLI based on tools.deps
           lein: '2.9.10'     # or use 'latest' to always provision latest version of leiningen
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
 
       - name: Add firebolt driver imports to metabase
         shell: bash
@@ -53,6 +57,9 @@ jobs:
               cd modules/drivers
               clojure -X:deps prep
               cd ../..
+
+      - name: Create version.properties file
+        run: echo -e "tag=${{ vars.METABASE_VERSION }}\nhash=dev\ndate=$(date +'%Y-%m-%d')" > resources/version.properties
 
       - name: Setup database and engine
         id: setup
