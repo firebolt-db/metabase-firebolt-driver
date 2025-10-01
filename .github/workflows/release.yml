@@ -24,7 +24,7 @@ jobs:
       - name: Install clojure tools
         uses: DeLaGuardo/setup-clojure@3.7
         with:
-          lein: '2.9.10'
+          lein: '2.12.0'
 
       - name: "Install dependencies"
         env:
