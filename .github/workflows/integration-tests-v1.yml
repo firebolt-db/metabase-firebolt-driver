@@ -18,24 +18,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: "Checkout Metabase Code"
-        uses: actions/checkout@v2
+        uses: actions/checkout@v5
         with:
           repository: metabase/metabase
           ref: ${{ inputs.metabase_version || vars.METABASE_VERSION }}
 
       - name: Checkout firebolt connector code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v5
         with:
           path: modules/drivers/firebolt
 
       - name: Prepare java
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v5
         with:
           distribution: 'zulu'
           java-version: '21'
 
       - name: Install clojure tools
-        uses: DeLaGuardo/setup-clojure@3.7
+        # v13.4
+        uses: DeLaGuardo/setup-clojure@3fe9b3ae632c6758d0b7757b0838606ef4287b08
         with:
           # Install just one or all simultaneously
           cli: '1.11.1.1155' # Clojure CLI based on tools.deps
