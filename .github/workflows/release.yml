@@ -27,7 +27,8 @@ jobs:
           java-version: '21'
 
       - name: Install clojure tools
-        uses: DeLaGuardo/setup-clojure@13.4
+        # v13.4
+        uses: DeLaGuardo/setup-clojure@3fe9b3ae632c6758d0b7757b0838606ef4287b08
         with:
           lein: '2.9.10'
 
@@ -39,7 +40,8 @@ jobs:
           lein deps
 
       - name: Import GPG key
-        uses: crazy-max/ghaction-import-gpg@v6
+        # v6.3
+        uses: crazy-max/ghaction-import-gpg@e89d40939c28e39f97cf32126055eeae86ba74ec
         id: import_gpg
         with:
           gpg_private_key: ${{ secrets.GRADLE_SIGNING_KEY }}
