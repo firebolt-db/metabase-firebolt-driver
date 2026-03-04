@@ -32,10 +32,11 @@ driver:
       required: false
       placeholder: engine name
       helper-text: If not specified, the default engine will be picked.
-    - name: additional-options
-      display-name: Additional JDBC options
-      placeholder: param_1=value_1&param_2=value_2...
-      required: false
+    - advanced-options-start
+    - merge:
+      - additional-options
+      - placeholder: 'param_1=value_1&param_2=value_2...'
+    - default-advanced-options
   connection-properties-include-tunnel-config: false
 init:
   - step: load-namespace
