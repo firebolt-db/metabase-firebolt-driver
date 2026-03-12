@@ -32,10 +32,17 @@ driver:
       required: false
       placeholder: engine name
       helper-text: If not specified, the default engine will be picked.
+    - advanced-options-start
     - name: additional-options
       display-name: Additional JDBC options
       placeholder: param_1=value_1&param_2=value_2...
       required: false
+    - default-advanced-options
+    - name: schemas
+      display-name: Schemas
+      type: syncable-schemas
+      required: false
+      helper-text: Sync all schemas, or choose which schemas to include or exclude during exploration.
   connection-properties-include-tunnel-config: false
 init:
   - step: load-namespace

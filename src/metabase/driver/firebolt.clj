@@ -77,6 +77,82 @@
 (defmethod driver/db-default-timezone :firebolt [_ _]  "UTC" ) ; possible parameters db-default-timezone
 
 (defmethod sql.qp/honey-sql-version :firebolt [_] 2)
+
+;;; ---------------------------------------------- schema filter (exploration) ---------------------------------------
+
+(defn- glob-pattern->regex
+  "Convert a simple glob pattern (only * supported) to a regex pattern string.
+   * matches any sequence of characters."
+  [s]
+  (when (str/blank? s)
+    (throw (IllegalArgumentException. "Pattern cannot be blank")))
+  (str "^"
+       (str/escape (str/trim s) {\* ".*"
+                                  \. "\\."
+                                  \[ "\\["
+                                  \] "\\]"
+                                  \( "\\("
+                                  \) "\\)"
+                                  \+ "\\+"
+                                  \? "\\?"
+                                  \{ "\\{"
+                                  \} "\\}"})
+       "$"))
+
+(defn- schema-matches-pattern?
+  [schema-name pattern]
+  (try
+    (when (and schema-name (seq (str/trim pattern)))
+      (let [re (re-pattern (glob-pattern->regex pattern))]
+        (boolean (re-matches re schema-name))))
+    (catch Exception _ false)))
+
+(defn- parse-schema-list
+  "Parse a comma-separated string or coll of schema names/patterns into a set of trimmed strings."
+  [v]
+  (cond
+    (nil? v) #{}
+    (string? v) (set (map str/trim (str/split (str/trim v) #",")))
+    (coll? v)   (set (map str/trim (map str v)))
+    :else       #{}))
+
+(defn- syncable-schema-predicate
+  "Build a predicate (schema-name -> boolean) from connection details :schemas.
+   Details :schemas can be:
+   - nil / absent: include all schemas
+   - map with :filter-type and :schemas:
+     - :filter-type \"only\" or :only -> include only schemas matching :schemas (comma-separated or coll, * allowed)
+     - :filter-type \"exclude\" or :exclude -> include all except those matching :schemas
+   - string: treat as 'only these' comma-separated list."
+  [details]
+  (let [schemas-config (get details :schemas)]
+    (cond
+      (nil? schemas-config)
+      (constantly true)
+
+      (string? schemas-config)
+      (let [patterns (parse-schema-list schemas-config)]
+        (fn [schema-name]
+          (some #(schema-matches-pattern? schema-name %) patterns)))
+
+      (map? schemas-config)
+      (let [filter-type (some-> (get schemas-config :filter-type) str str/lower-case keyword)
+            filter-type (or filter-type (get schemas-config :filter-type))
+            patterns (parse-schema-list (get schemas-config :schemas))]
+        (if (empty? patterns)
+          (constantly true)
+          (case filter-type
+            (:only "only")
+            (fn [schema-name]
+              (some #(schema-matches-pattern? schema-name %) patterns))
+            (:exclude "exclude")
+            (fn [schema-name]
+              (not (some #(schema-matches-pattern? schema-name %) patterns)))
+            (constantly true))))
+
+      :else
+      (constantly true))))
+
 ;;; ------------------------------------------------- sql-jdbc.sync --------------------------------------------------
 
 ; Define mapping of firebolt data types to base type
@@ -214,11 +290,6 @@
 
 ;(models/defmodel Table :metabase_table)
 
-
-; Get the active tables of configured database
-(defmethod sql-jdbc.sync/active-tables :firebolt [& args]
-  (apply sql-jdbc.sync/post-filtered-active-tables args))
-
 ; call REGEXP_MATCHES function when regex-match-first is called
 (defmethod sql.qp/->honeysql [:firebolt :regex-match-first]
            [_ [_ arg pattern]]
@@ -263,10 +334,21 @@
   [& args]
   (apply sql-jdbc.sync/post-filtered-active-tables args))
 
-; Exclude information_schema schema from syncing
+; Exclude information_schema from syncing (always excluded regardless of user schema filter)
 (defmethod sql-jdbc.sync/excluded-schemas :firebolt
   [_]
-  [])
+  #{"information_schema"})
+
+; Override describe-database to apply user-configured schema filter from connection details (Schemas dropdown).
+(defmethod driver/describe-database :firebolt
+  [driver db-or-id-or-spec]
+  (let [result (sql-jdbc.sync/describe-database driver db-or-id-or-spec)
+        tables (get result :tables)
+        details (when (map? db-or-id-or-spec) (:details db-or-id-or-spec))
+        include? (syncable-schema-predicate (or details {}))]
+    (if (or (nil? details) (empty? tables))
+      result
+      (assoc result :tables (set (filter #(include? (or (:schema %) "")) tables))))))
 
 (defmethod sql-jdbc.describe-table/get-table-pks :firebolt
   [_ ^Connection conn db-name-or-nil table]
@@ -302,7 +384,7 @@
                               :nested-fields                          false
                               :advanced-math-expressions              false
                               :percentile-aggregations                false
-                              :schemas                                false
+                              :schemas                                true
                               :uploads                                false
                               :index-info                             false ;TODO: Implement index-info
                               :table-privileges                       false ;TODO: Implement table-privileges
