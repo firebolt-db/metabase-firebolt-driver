@@ -18,31 +18,31 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: "Checkout Metabase Code"
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           repository: metabase/metabase
           ref: ${{ inputs.metabase_version || vars.METABASE_VERSION }}
 
       - name: Checkout firebolt connector code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           path: modules/drivers/firebolt
 
       - name: Prepare java
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           distribution: 'zulu'
           java-version: '21'
 
       - name: Install clojure tools
         # v13.4
-        uses: DeLaGuardo/setup-clojure@3fe9b3ae632c6758d0b7757b0838606ef4287b08
+        uses: DeLaGuardo/setup-clojure@f556541eb28a9303896cee0679ba9f60b898300f
         with:
           # Install just one or all simultaneously
           cli: '1.11.1.1155' # Clojure CLI based on tools.deps
           lein: '2.9.10'     # or use 'latest' to always provision latest version of leiningen
 
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
 
@@ -68,7 +68,7 @@ jobs:
 
       - name: Setup database and engine
         id: setup
-        uses: firebolt-db/integration-testing-setup@v1
+        uses: firebolt-db/integration-testing-setup@v2
         with:
           firebolt-username: ${{ secrets.FIREBOLT_STG_USERNAME }}
           firebolt-password: ${{ secrets.FIREBOLT_STG_PASSWORD }}
@@ -87,7 +87,7 @@ jobs:
           clojure -X:dev:drivers:drivers-dev:test
 
       - name: Publish Test Report
-        uses: dorny/test-reporter@v1
+        uses: dorny/test-reporter@v2
         if: failure()
         with:
           path: 'target/junit/**/*_test.xml'
